@@ -4,13 +4,13 @@ from modelFunctions import trainModel, evaluateModel
 
 print("Hello world")
 
-trainDataSet, testDataSet = getDataSet("Ciphar-10")
+trainingData, trainingLabels, testData, testLabels = getDataSet("cifar-10")
 model = createModel()
 
 trainParameters = "Some object storing the parameters nicely"
 
-trainedModel, trainingStats = trainModel(model, trainParameters, trainDataSet)
-evaluationStats = evaluateModel(trainedModel, testDataSet)
+trainedModel, trainingStats = trainModel(model, trainParameters, trainingData, trainingLabels)
+evaluationStats = evaluateModel(trainedModel, testData, testLabels)
 
 # visualize(trainingStats)
 # visualize(evaluationStats)
