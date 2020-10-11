@@ -1,11 +1,9 @@
 from dataManagement import *
-from model import *
-from modelFunctions import trainModel, evaluateModel
+from modelFunctions import trainModel, evaluateModel, buildModel
 
-print("Hello world")
 
-trainingData, trainingLabels, testData, testLabels = getDataSet("cifar-10")
-model = createModel()
+trainingData, trainingLabels, testData, testLabels = getDataSet()
+model = buildModel(encoderNetwork="resnet-18", projectionHeadMode="linear")
 
 trainParameters = "Some object storing the parameters nicely"
 

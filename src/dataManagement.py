@@ -2,13 +2,14 @@
 
 import pickle
 import numpy as np
+import flagSettings
 
-def getDataSet(dataSetName):
+def getDataSet():
 
-    if dataSetName == "cifar-10":
+    if flagSettings.dataSet == "cifar-10":
         return load_cifar10(5)
     else:
-        raise NotImplemented("This dataset is not implemented yet : " + dataSetName)
+        raise NotImplemented("This dataset is not implemented yet : " + flagSettings.dataSet)
 
 def load_cifar10(nrBatches=5):
     trainingData = []
