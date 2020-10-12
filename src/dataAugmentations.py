@@ -148,10 +148,13 @@ def augmentBatch(images, labels):
     Returns:
         original images, augmented images, and associated labels in separate lists
     """
-    augments = []
-    for image in images:
-        augments.append(randomApply(image))
+    augment1 = []
+    augment2 = []
     
-    return images, augments, labels
+    for image in images:
+        for i in range(2):
+            augment1.append(randomApply(image))
+            augment2.append(randomApply(image))
+    return images, augment1, augment2, labels
         
 
