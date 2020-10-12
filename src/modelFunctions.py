@@ -1,4 +1,7 @@
 import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense
+
 from models import projectionHead
 from models import resnet18
 import flagSettings
@@ -8,10 +11,11 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
-def build_model(encoder_network="resnet-18", projection_head_mode="linear"):
+def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
     if encoder_network == "resnet-18":
-        base_model = resnet18.resnet18(input_shape=flagSettings.input_shape, num_classes=flagSettings.num_classes)
-        sim_clr = projectionHead.addProjectionHead(base_model, projection_head_mode)
+        inputs, base_model = resnet18.resnet18(input_shape=flagSettings.input_shape)
+        outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
+        raise NotImplemented("Projection head is not working until we have created the loss function")
     elif encoder_network == "resnet-50":
         raise NotImplemented("Not yet implemented")
     else:
@@ -21,17 +25,21 @@ def build_model(encoder_network="resnet-18", projection_head_mode="linear"):
         ido_stuff_here_yes = 0
         return ido_stuff_here_yes
 
-    # Todo fix lars optimizer here and real values
+    # Todo fix lars optimizer here and set proper training paramters
+    sim_clr = Model(inputs=inputs, outputs=outputs)
     lars = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
     sim_clr.compile(loss=contrastive_loss, optimizer=lars, metrics=["accuracy"])
+    sim_clr.summary()
     return sim_clr
 
 
 def build_normal_resnet():
-    baseModel = resnet18.resnet18(input_shape=flagSettings.input_shape, num_classes=flagSettings.num_classes)
+    inputs, hiddens = resnet18.resnet18(input_shape=flagSettings.input_shape)
+    outputs = Dense(flagSettings.num_classes, activation='softmax')(hiddens)
+    model = Model(inputs=inputs, outputs=outputs)
     SGD = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
-    baseModel.compile(loss="sparse_categorical_crossentropy", optimizer=SGD, metrics=["accuracy"])
-    return baseModel
+    model.compile(loss="sparse_categorical_crossentropy", optimizer=SGD, metrics=["accuracy"])
+    return model
 
 
 def train_model(model, training_data, training_labels):

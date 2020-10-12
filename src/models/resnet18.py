@@ -31,7 +31,7 @@ def resnet_layer(inputs,
     return x
 
 
-def resnet18(input_shape, num_classes):
+def resnet18(input_shape):
     """ResNet-18
 
     -> Arguments
@@ -82,10 +82,6 @@ def resnet18(input_shape, num_classes):
     # y = Flatten()(x)
     x = GlobalAveragePooling2D()(x)
     # y = Flatten()(x)
+    return inputs, x    # We do not add the last layer here as it needs to be flexible for SimCLR or for a normal network
 
-    outputs = Dense(num_classes,
-                    activation='softmax')(x)
 
-    # Instantiate model.
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
