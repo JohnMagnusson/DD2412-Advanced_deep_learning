@@ -1,14 +1,13 @@
 from dataManagement import *
-from modelFunctions import trainModel, evaluateModel, buildModel
+from modelFunctions import train_model, evaluate_model, build_model, build_normal_resnet
 
 
-trainingData, trainingLabels, testData, testLabels = getDataSet()
-model = buildModel(encoderNetwork="resnet-18", projectionHeadMode="linear")
+training_data, training_labels, test_data, test_labels = get_data_set()
+# model = buildModel(encoderNetwork="resnet-18", projectionHeadMode="linear")
+model = build_normal_resnet()
 
-trainParameters = "Some object storing the parameters nicely"
-
-trainedModel, trainingStats = trainModel(model, trainParameters, trainingData, trainingLabels)
-evaluationStats = evaluateModel(trainedModel, testData, testLabels)
+trained_model, trainingStats = train_model(model, training_data, training_labels)
+evaluationStats = evaluate_model(trained_model, test_data, test_labels)
 
 # visualize(trainingStats)
 # visualize(evaluationStats)

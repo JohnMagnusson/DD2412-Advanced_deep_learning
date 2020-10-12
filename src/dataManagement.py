@@ -4,31 +4,30 @@ import pickle
 import numpy as np
 import flagSettings
 
-def getDataSet():
+def get_data_set():
 
-    if flagSettings.dataSet == "cifar-10":
+    if flagSettings.data_set == "cifar-10":
         return load_cifar10(5)
     else:
-        raise NotImplemented("This dataset is not implemented yet : " + flagSettings.dataSet)
+        raise NotImplemented("This dataset is not implemented yet : " + flagSettings.data_set)
 
 def load_cifar10(nrBatches=5):
-    trainingData = []
-    trainingLabels = []
+    training_data = []
+    training_labels = []
     for i in range(1, (nrBatches+1)):
         x, y = load_cifar10_batch("data_batch_" + str(i))
-        trainingData.extend(x)
-        trainingLabels.extend(y)
+        training_data.extend(x)
+        training_labels.extend(y)
 
-    testData, testLabels = load_cifar10_batch("test_batch")
+    test_data, test_labels = load_cifar10_batch("test_batch")
 
-    return np.array(trainingData), np.array(trainingLabels), testData, np.array(testLabels)
+    return np.array(training_data), np.array(training_labels), test_data, np.array(test_labels)
 
-def load_cifar10_batch(batchName):
-    with open("../datasets/cifar-10/" + str(batchName), mode='rb') as file:
+def load_cifar10_batch(batch_name):
+    with open("../datasets/cifar-10/" + str(batch_name), mode='rb') as file:
         # note the encoding type is 'latin1'
         batch = pickle.load(file, encoding='latin1')
 
     data = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
     labels = batch['labels']
-
     return data, labels
