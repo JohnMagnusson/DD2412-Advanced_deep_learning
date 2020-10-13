@@ -24,7 +24,7 @@ def load_cifar10(nrBatches=5):
     return np.array(training_data), np.array(training_labels), test_data, np.array(test_labels)
 
 def load_cifar10_batch(batch_name):
-    with open("../datasets/cifar-10/" + str(batch_name), mode='rb') as file:
+    with open("../../datasets/cifar-10/" + str(batch_name), mode='rb') as file:
         # note the encoding type is 'latin1'
         batch = pickle.load(file, encoding='latin1')
 

@@ -8,7 +8,7 @@ from PIL import Image, ImageOps
 from resizeimage import resizeimage
 import cv2
 import tensorflow as tf
-import dataManagement
+import src.dataManagement
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -133,7 +133,7 @@ def randomApply(image):
     
     #apply color drop
     rand = random.randrange(0, 100)
-    if rand <20:
+    if rand < 20:
         image = colorDrop(image)
     else:
         pass
@@ -150,11 +150,12 @@ def augmentBatch(images, labels):
     """
     augment1 = []
     augment2 = []
-    
+
     for image in images:
         for i in range(2):
             augment1.append(randomApply(image))
             augment2.append(randomApply(image))
     return images, augment1, augment2, labels
+
         
 

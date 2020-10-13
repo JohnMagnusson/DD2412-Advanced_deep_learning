@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense, Conv2D
 from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.layers import GlobalAveragePooling2D, Input, Flatten, MaxPool2D, AveragePooling2D
 from tensorflow.keras.models import Model
-import flagSettings
+import src.flagSettings
 
 
 
@@ -45,14 +45,16 @@ def resnet18(input_shape):
     num_filters = 64
     inputs = Input(shape=input_shape)
 
+
     if flagSettings.data_set == "cifar-10":
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1)
     else:
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7))
         x = MaxPool2D(pool_size=(3, 3), strides=2, padding="same")(x)
 
+
     # Instantiate the stack of residual units
-    num_res_blocks = [3, 4, 6, 3]
+    num_res_blocks = [2, 2, 2, 2]
     for stack in range(4):
         for res_block in range(num_res_blocks[stack]):
             strides = 1
