@@ -10,7 +10,7 @@ import src.flagSettings
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
-#tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
 def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
@@ -35,12 +35,13 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
     return sim_clr
 
 
-def build_normal_resnet():
+def build_normal_resnet(isorOwn= False):
     inputs, hiddens = resnet18.resnet18(input_shape=flagSettings.input_shape)
     outputs = Dense(flagSettings.num_classes, activation='softmax')(hiddens)
     model = Model(inputs=inputs, outputs=outputs)
-    SGD = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
-    model.compile(loss="sparse_categorical_crossentropy", optimizer=SGD, metrics=["accuracy"])
+    if isorOwn:
+        SGD = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
+        model.compile(loss="sparse_categorical_crossentropy", optimizer=SGD, metrics=["accuracy"])
     return model
 
 

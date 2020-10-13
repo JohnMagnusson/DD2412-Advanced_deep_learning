@@ -7,6 +7,7 @@ from src.customTraining import TrainingEngine
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 from src.modelFunctions import build_normal_resnet
+import flagSettings
 
 
 validation_size = 5000
@@ -25,14 +26,14 @@ if __name__ == "__main__":
     input_shape = x_train.shape[1:]
     n_colors = x_train.shape[3]
     depth = n_colors * 6 + 2
-    model = resnet18(input_shape)
+    model = resnet18(flagSettings.input_shape)
 
     '''
     model = tf.keras.applications.ResNet50(
       weights = None, input_shape = input_shape,
     pooling=None, classes=10)
     '''
-    model = build_normal_resnet()
+    model = build_normal_resnet(isorOwn=True)
 
     '''
     model.compile(optimizer='adam',
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     training_module.optimizer = tf.keras.optimizers.SGD()
     training_module.fit(train_data,
                           test_data,
-                          batch_size=batch_size,
-                          epochs=epochs)
+                          batch_size=flagSettings.batch_size,
+                          epochs=flagSettings.nr_epochs)
 
     '''
 
