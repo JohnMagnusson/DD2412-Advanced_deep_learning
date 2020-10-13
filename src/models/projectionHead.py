@@ -14,7 +14,7 @@ def add_projection_head(base_model, projectionHeadMode):
 
 
 def get_linear_head(base_model):
-    return Dense(512, name="projection_head")(base_model)
+    return Dense(10, name="projection_head")(base_model)
 
 
 def get_non_linear_head(base_model):
@@ -22,9 +22,9 @@ def get_non_linear_head(base_model):
     :param base_model: The output of the hidden from the base model (ResNet)
     :return: Output of the last hidden layer in the MLP (projection head)
     """
-    projection_1 = Dense(512, name="projection_head_1")(base_model)
+    projection_1 = Dense(10, name="projection_head_1")(base_model)
     projection_1 = Activation("relu")(projection_1)
-    projection_2 = Dense(256, name="projection_head_2")(projection_1)
+    projection_2 = Dense(10, name="projection_head_2")(projection_1)
     projection_2 = Activation("relu")(projection_2)
-    projection_3 = Dense(128, name="projection_head_3")(projection_2)
+    projection_3 = Dense(10, name="projection_head_3")(projection_2)
     return projection_3

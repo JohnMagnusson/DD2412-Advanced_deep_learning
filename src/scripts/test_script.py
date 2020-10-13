@@ -6,7 +6,7 @@ from src.dataManagement import load_cifar10
 from src.customTraining import TrainingEngine
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
-from src.modelFunctions import build_normal_resnet
+from src.modelFunctions import build_normal_resnet, build_simCLR_model
 import flagSettings
 
 
@@ -33,8 +33,8 @@ if __name__ == "__main__":
       weights = None, input_shape = input_shape,
     pooling=None, classes=10)
     '''
-    model = build_normal_resnet(isorOwn=True)
-
+    # model = build_normal_resnet(isorOwn=True)
+    model = build_simCLR_model("renset-18", projection_head_mode="linear")
     '''
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(),
