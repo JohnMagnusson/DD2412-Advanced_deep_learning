@@ -5,6 +5,7 @@ from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.layers import GlobalAveragePooling2D, Input, Flatten, MaxPool2D, AveragePooling2D
 from tensorflow.keras.models import Model
 import src.flagSettings
+from src.augmentationEngine import SimClrAugmentation
 
 
 
@@ -45,8 +46,13 @@ def resnet18(input_shape):
     num_filters = 64
     inputs = Input(shape=input_shape)
 
+    #AugmSimCLR = SimClrAugmentation()
+    #_, augmented_inputs_1, augmented_inputs_2, _ = AugmSimCLR.transform(inputs)
 
-    if flagSettings.data_set == "cifar-10":
+
+
+
+    if src.flagSettings.data_set == "cifar-10":
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1)
     else:
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7))

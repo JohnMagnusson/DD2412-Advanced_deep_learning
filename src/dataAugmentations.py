@@ -5,8 +5,7 @@
 
 
 from PIL import Image, ImageOps
-from resizeimage import resizeimage
-import cv2
+#import cv2
 import tensorflow as tf
 import src.dataManagement
 import numpy as np

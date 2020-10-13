@@ -2,13 +2,15 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense
 
-from models import projectionHead
-from models import resnet18
-import flagSettings
+import src
+from src import flagSettings
+from src.models import projectionHead
+from src.models import resnet18
+import src.flagSettings
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+#tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
 def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
@@ -46,6 +48,7 @@ def train_model(model, training_data, training_labels):
     model.fit(training_data, training_labels, epochs=flagSettings.nr_epochs, batch_size=flagSettings.batch_size)
     return model, []
 
+'''
 def NTXent_Loss(z_i, z_j, tau=1.0):
     #https://joaolage.com/notes-simclr-framework
     batch_size = tf.shape(z_i)[0]
@@ -68,7 +71,7 @@ def NTXent_Loss(z_i, z_j, tau=1.0):
     loss=tf.reduce_mean(loss_i+loss_j)
     
     return loss
-
+'''
 
 def evaluate_model(trainedModel, testData, testLabels):
     scores = trainedModel.evaluate(x=testData, y= testLabels, verbose=1)

@@ -2,6 +2,7 @@
 
 
 from src.dataAugmentations import *
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 class AugmentationEngine:
