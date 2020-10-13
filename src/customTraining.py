@@ -108,7 +108,6 @@ class TrainingEngine:
     def evaluate(self, test_data):
         """
 
-
         Parameters
         ----------
         test_data : TensorFlow Dataset
