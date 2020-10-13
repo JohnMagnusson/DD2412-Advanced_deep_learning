@@ -51,7 +51,7 @@ def train_model_default(model, training_data, training_labels):
 def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
     training_module.optimizer = tf.keras.optimizers.SGD()
-    training_module.train_loss = lossFunctions.NTXent_Loss()
+    training_module.loss_object = lossFunctions.NTXent_Loss
     training_module.data_augmentation_module = SimClrAugmentation()
     training_module.fit(train_data,
                         test_data,

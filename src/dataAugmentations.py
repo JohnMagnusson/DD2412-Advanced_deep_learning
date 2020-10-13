@@ -2,8 +2,7 @@
 # coding: utf-8
 
 # In[17]:
-
-
+import cv2
 from PIL import Image, ImageOps
 #import cv2
 import tensorflow as tf
@@ -103,7 +102,7 @@ def randomApply(image):
     Returns:
         Tensor of Image(s) with the random augmentations applied
     """
-    normal_image = image.copy()
+    # normal_image = image.copy()
     
     #apply flip
     rand = random.randrange(0, 100)

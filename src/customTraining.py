@@ -88,10 +88,11 @@ class TrainingEngine:
                 epoch_train_data = train_data
 
 
-            batched_train_data = epoch_train_data.batch(batch_size)
-            for batch_x, batch_y in batched_train_data:
-                _, batch_x_augmented_1, batch_x_augmented_2, _ = self.data_augmentation_module.transform(batch_x)
-                self.__train_step(batch_x_augmented_1, batch_x_augmented_2, batch_y)
+            _, x_augmented_1, x_augmented_2, labels = self.data_augmentation_module.transform(epoch_train_data)
+            augmented_train_data = tf.data.Dataset.from_tensor_slices((x_augmented_1, x_augmented_2, labels))
+            batched_train_data = augmented_train_data.batch(batch_size)
+            for batch_x_1, batch_x_2, batch_y in batched_train_data:
+                self.__train_step(batch_x_1, batch_x_2, batch_y)
 
             batched_val_data = validation_data.batch(batch_size)
             for batch_x_val, batch_y_val in batched_val_data:
