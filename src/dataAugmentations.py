@@ -10,7 +10,7 @@ import src.dataManagement
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-#import tensorflow_addons as tfa
+import tensorflow_addons as tfa
 
 def cropResize(image):
     """Crops image to random size and resizes to original shape
@@ -44,9 +44,9 @@ def gaussianBlur(image,std):
         Image(s) with a gaussian blur applied
     """
     width, height, color_channels = image.shape
-    #blured_image = tfa.image.gaussian_filter2d(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
-    blured_image = cv2.GaussianBlur(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
-    return blured_image
+    blured_image = tfa.image.gaussian_filter2d(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
+    #blured_image = cv2.GaussianBlur(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
+    return image
 
 def flip(image):
     """Applies a horizontal flip
@@ -55,7 +55,8 @@ def flip(image):
     Returns:
         Flipped image
     """
-    flipped = cv2.flip(image,1)
+    #flipped = cv2.flip(image,1)
+    flipped = tf.image.flip_left_right(image)
     return flipped
     
 def colorJitter(image, s):
@@ -111,14 +112,6 @@ def randomApply(image):
     else:
         pass
     
-    #apply gaussian blur
-    rand = random.randrange(0, 100)
-    if rand <50:
-        std = random.uniform(.1, 2)
-        image = gaussianBlur(image,std)
-    else:
-        pass
-    
     #apply crop
     image = cropResize(image)
     
@@ -136,6 +129,14 @@ def randomApply(image):
     else:
         pass
     
+    #apply gaussian blur
+    rand = random.randrange(0, 100)
+    if rand <50:
+        std = random.uniform(.1, 2)
+        image = gaussianBlur(image,std)
+    else:
+        pass
+    
     return image
     
 def augmentBatch(images, labels):
@@ -150,9 +151,9 @@ def augmentBatch(images, labels):
     augment2 = []
 
     for image in images:
-        for i in range(2):
-            augment1.append(randomApply(image))
-            augment2.append(randomApply(image))
+        augment1.append(randomApply(image))
+        augment2.append(randomApply(image))
+            
     return images, augment1, augment2, labels
 
         
