@@ -3,12 +3,12 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense
 
 import src
-from customTraining import TrainingEngine
-from src import flagSettings
+from src.customTraining import TrainingEngine
+from src import flagSettings, lossFunctions
 from src.models import projectionHead
 from src.models import resnet18
-import src.flagSettings
-import lossFunctions
+
+from src.augmentationEngine import SimClrAugmentation
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -52,6 +52,7 @@ def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
     training_module.optimizer = tf.keras.optimizers.SGD()
     training_module.train_loss = lossFunctions.NTXent_Loss()
+    training_module.data_augmentation_module = SimClrAugmentation()
     training_module.fit(train_data,
                         test_data,
                         batch_size=flagSettings.batch_size,
