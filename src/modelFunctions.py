@@ -8,11 +8,11 @@ from src import flagSettings, lossFunctions
 from src.models import projectionHead
 from src.models import resnet18
 
-from src.augmentationEngine import SimClrAugmentation
+from src.augmentationEngine import SimClrAugmentation, TestAugmentation
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+#tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
 def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
@@ -53,6 +53,7 @@ def train_model(model, train_data, test_data):
     training_module.optimizer = tf.keras.optimizers.SGD()
     training_module.loss_object = lossFunctions.NTXent_Loss
     training_module.data_augmentation_module = SimClrAugmentation()
+    #training_module.data_augmentation_module = TestAugmentation()
     training_module.fit(train_data,
                         test_data,
                         batch_size=flagSettings.batch_size,

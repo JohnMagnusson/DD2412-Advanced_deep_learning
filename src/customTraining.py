@@ -34,7 +34,6 @@ class TrainingEngine:
             loss = self.loss_object(predictions_augm_1, predictions_augm_2)
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
-
         self.train_loss(loss)
         #self.train_accuracy(labels, predictions)
 
@@ -45,7 +44,6 @@ class TrainingEngine:
         predictions_augm_1 = self.model(images_augm_1, training=True)
         predictions_augm_2 = self.model(images_augm_2, training=True)
         t_loss = self.loss_object(predictions_augm_1, predictions_augm_2)
-
         self.test_loss(t_loss)
         #self.test_accuracy(labels, predictions)
 
@@ -88,16 +86,22 @@ class TrainingEngine:
                 epoch_train_data = train_data
 
 
-            _, x_augmented_1, x_augmented_2, labels = self.data_augmentation_module.transform(epoch_train_data)
-            augmented_train_data = tf.data.Dataset.from_tensor_slices((x_augmented_1, x_augmented_2, labels))
+            augmented_train_data = self.data_augmentation_module.transform(epoch_train_data)
+            augmented_val_data = self.data_augmentation_module.transform(validation_data)
             batched_train_data = augmented_train_data.batch(batch_size)
-            for batch_x_1, batch_x_2, batch_y in batched_train_data:
-                self.__train_step(batch_x_1, batch_x_2, batch_y)
+            for iteration, (_, batch_x_1, batch_x_2, batch_y) in enumerate(batched_train_data):
+                self.__train_step(batch_x_1, batch_x_2)
+                batched_val_data = augmented_val_data.batch(batch_size)
+                for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
+                    self.__test_step(batch_x1_val, batch_x2_val)
+                if verbose:
+                    template = 'Epoch {}, Iteration {}, Loss: {}, Validation Loss: {} '
+                    print(template.format(epoch + 1,
+                                          iteration,
+                                          self.train_loss.result(),
+                                          self.test_loss.result()))
 
-            batched_val_data = validation_data.batch(batch_size)
-            for batch_x_val, batch_y_val in batched_val_data:
-                self.__test_step(batch_x_val, batch_y_val)
-
+            '''
             if verbose:
                 template = 'Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}, ' \
                            'Learning rate: {}'
@@ -107,6 +111,7 @@ class TrainingEngine:
                                       self.test_loss.result(),
                                       self.test_accuracy.result() * 100,
                                       self.optimizer.lr.numpy()))
+            '''
 
     def evaluate(self, test_data):
         """

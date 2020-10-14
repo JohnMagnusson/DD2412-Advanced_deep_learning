@@ -14,3 +14,9 @@ class SimClrAugmentation(AugmentationEngine):
         data = data.map(lambda x, y: (augmentBatch(x, y)),
                         num_parallel_calls=AUTOTUNE)
         return data
+
+class TestAugmentation(AugmentationEngine):
+    def transform(self, data):
+        data = data.map(lambda x, y: (x, x, x, y),
+                        num_parallel_calls=AUTOTUNE)
+        return data
