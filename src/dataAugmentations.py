@@ -4,7 +4,7 @@
 # In[17]:
 import cv2
 from PIL import Image, ImageOps
-#import cv2
+import cv2
 import tensorflow as tf
 import src.dataManagement
 import numpy as np
@@ -150,11 +150,11 @@ def augmentBatch(images, labels):
     augment1 = []
     augment2 = []
 
-    for image in images:
-        augment1.append(randomApply(image))
-        augment2.append(randomApply(image))
+    #for image in images:
+    #    augment1.append(randomApply(images))
+    #    augment2.append(randomApply(images))
             
-    return images, augment1, augment2, labels
+    return images, randomApply(images), randomApply(images), labels
 
         
 

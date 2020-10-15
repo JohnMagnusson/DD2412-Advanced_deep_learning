@@ -87,9 +87,9 @@ def resnet18(input_shape):
         num_filters *= 2
 
     # x = GlobalAveragePooling2D()(x)
-    # y = Flatten()(x)
     x = GlobalAveragePooling2D()(x)
-    # y = Flatten()(x)
+    #x = Flatten()(x)
+
     return inputs, x    # We do not add the last layer here as it needs to be flexible for SimCLR or for a normal network
 
 
