@@ -1,18 +1,17 @@
 import tensorflow as tf
-from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model
 
-import src
-from src.customTraining import TrainingEngine
 from src import flagSettings, lossFunctions
+from src.augmentationEngine import SimClrAugmentation
+from src.customTraining import TrainingEngine
 from src.models import projectionHead
 from src.models import resnet18
 
-from src.augmentationEngine import SimClrAugmentation, TestAugmentation
-
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
-#tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
+if len(physical_devices) > 0:
+    tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
 def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
@@ -25,12 +24,7 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
 
-
-    # Todo fix lars optimizer here and set proper training paramters
-
-    # lars = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
-    # sim_clr.compile(loss=contrastive_loss, optimizer=lars, metrics=["accuracy"])
-    # sim_clr.summary()
+    sim_clr.summary()
     return sim_clr
 
 
@@ -51,7 +45,8 @@ def train_model_default(model, training_data, training_labels):
 def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
     training_module.optimizer = tf.keras.optimizers.SGD()
-    training_module.loss_object = lossFunctions.NTXent_Loss
+    # training_module.loss_object = lossFunctions.NTXent_Loss
+    training_module.loss_object = lossFunctions.NT_Xent_tf
     training_module.data_augmentation_module = SimClrAugmentation()
     #training_module.data_augmentation_module = TestAugmentation()
     training_module.fit(train_data,

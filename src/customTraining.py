@@ -24,7 +24,7 @@ class TrainingEngine:
 
         self.data_augmentation_module = data_augmentation_module
 
-    @tf.function
+    # @tf.function
     def __train_step(self, images_augm_1, images_augm_2):
         with tf.GradientTape() as tape:
             # training=True is only needed if there are layers with different
