@@ -71,14 +71,15 @@ class TrainingEngine:
 
         Returns
         -------
-        None.
+        List of the loss over each iteration
 
         """
+        loss_over_training = []
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
             self.train_accuracy.reset_states()
-            self.test_loss.reset_states()
-            self.test_accuracy.reset_states()
+            # self.test_loss.reset_states()
+            # self.test_accuracy.reset_states()
 
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
@@ -91,6 +92,7 @@ class TrainingEngine:
             batched_train_data = augmented_train_data.batch(batch_size)
             for iteration, (_, batch_x_1, batch_x_2, batch_y) in enumerate(batched_train_data):
                 self.__train_step(batch_x_1, batch_x_2)
+                loss_over_training.append(self.train_loss.result().numpy())
                 #batched_val_data = augmented_val_data.batch(batch_size)
                 #for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
                 #    self.__test_step(batch_x1_val, batch_x2_val)
@@ -101,17 +103,18 @@ class TrainingEngine:
                                           self.train_loss.result(),
                                           self.test_loss.result()))
 
-            '''
-            if verbose:
-                template = 'Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}, ' \
-                           'Learning rate: {}'
-                print(template.format(epoch + 1,
-                                      self.train_loss.result(),
-                                      self.train_accuracy.result() * 100,
-                                      self.test_loss.result(),
-                                      self.test_accuracy.result() * 100,
-                                      self.optimizer.lr.numpy()))
-            '''
+
+            # if verbose:
+            #     template = 'Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}, ' \
+            #                'Learning rate: {}'
+            #     print(template.format(epoch + 1,
+            #                           self.train_loss.result(),
+            #                           self.train_accuracy.result() * 100,
+            #                           self.test_loss.result(),
+            #                           self.test_accuracy.result() * 100,
+            #                           self.optimizer.lr.numpy()))
+
+        return loss_over_training
 
     def evaluate(self, test_data):
         """

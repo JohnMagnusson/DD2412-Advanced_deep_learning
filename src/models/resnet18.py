@@ -1,12 +1,9 @@
-import tensorflow as tf
 import tensorflow.keras
-from tensorflow.keras.layers import Dense, Conv2D
 from tensorflow.keras.layers import BatchNormalization, Activation
-from tensorflow.keras.layers import GlobalAveragePooling2D, Input, Flatten, MaxPool2D, AveragePooling2D
-from tensorflow.keras.models import Model
-import src.flagSettings
-from src.augmentationEngine import SimClrAugmentation
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import GlobalAveragePooling2D, Input, MaxPool2D
 
+import src.flagSettings
 
 
 def resnet_layer(inputs,
@@ -15,7 +12,6 @@ def resnet_layer(inputs,
                  strides=1,
                  activation='relu',
                  batch_normalization=True):
-
     conv = Conv2D(num_filters,
                   kernel_size=kernel_size,
                   strides=strides,
@@ -46,18 +42,11 @@ def resnet18(input_shape):
     num_filters = 64
     inputs = Input(shape=input_shape)
 
-    #AugmSimCLR = SimClrAugmentation()
-    #_, augmented_inputs_1, augmented_inputs_2, _ = AugmSimCLR.transform(inputs)
-
-
-
-
     if src.flagSettings.data_set == "cifar-10":
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1)
     else:
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7))
         x = MaxPool2D(pool_size=(3, 3), strides=2, padding="same")(x)
-
 
     # Instantiate the stack of residual units
     num_res_blocks = [2, 2, 2, 2]
@@ -86,10 +75,5 @@ def resnet18(input_shape):
             x = Activation('relu')(x)
         num_filters *= 2
 
-    # x = GlobalAveragePooling2D()(x)
     x = GlobalAveragePooling2D()(x)
-    #x = Flatten()(x)
-
-    return inputs, x    # We do not add the last layer here as it needs to be flexible for SimCLR or for a normal network
-
-
+    return inputs, x  # We do not add the last layer here as it needs to be flexible for SimCLR or for a normal network

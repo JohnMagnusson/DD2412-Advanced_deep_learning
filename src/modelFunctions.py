@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
@@ -28,7 +29,7 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
     return sim_clr
 
 
-def build_normal_resnet(isorOwn= False):
+def build_normal_resnet(isorOwn=False):
     inputs, hiddens = resnet18.resnet18(input_shape=flagSettings.input_shape)
     outputs = Dense(flagSettings.num_classes, activation='softmax')(hiddens)
     model = Model(inputs=inputs, outputs=outputs)
@@ -42,31 +43,40 @@ def train_model_default(model, training_data, training_labels):
     model.fit(training_data, training_labels, epochs=flagSettings.nr_epochs, batch_size=flagSettings.batch_size)
     return model, []
 
+
 def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
     training_module.optimizer = tf.keras.optimizers.SGD()
-    # training_module.loss_object = lossFunctions.NTXent_Loss
-    training_module.loss_object = lossFunctions.NT_Xent_tf
+    training_module.loss_object = lossFunctions.NTXent_Loss
+    # training_module.loss_object = lossFunctions.NT_Xent_tf
     training_module.data_augmentation_module = SimClrAugmentation()
-    #training_module.data_augmentation_module = TestAugmentation()
-    training_module.fit(train_data,
-                        test_data,
-                        batch_size=flagSettings.batch_size,
-                        epochs=flagSettings.nr_epochs)
+    # training_module.data_augmentation_module = TestAugmentation()
+    loss = training_module.fit(train_data,
+                               test_data,
+                               batch_size=flagSettings.batch_size,
+                               epochs=flagSettings.nr_epochs)
 
-    scores = training_module.evaluate(test_data)
-    print('Test loss:', scores[1])
-    print('Test accuracy:', scores[0])
+    # scores = training_module.evaluate(test_data)
+    # print('Test loss:', scores[1])
+    # print('Test accuracy:', scores[0])
 
-    return model
+    return model, loss
 
 
-
+def plot_loss(trainingStats):
+    plt.plot(trainingStats, label='Loss')
+    # plt.plot(trainingStats[1], label='validation loss')
+    plt.xlabel('Iterations')
+    plt.ylabel('Error [NTXent Loss]')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 def evaluate_model(trainedModel, testData, testLabels):
-    scores = trainedModel.evaluate(x=testData, y= testLabels, verbose=1)
+    scores = trainedModel.evaluate(x=testData, y=testLabels, verbose=1)
     print("%s: %.2f%% on the test set" % (trainedModel.metrics_names[1], scores[1] * 100))
+
 
 def fine_tune_model(model):
     # Add dense with softmax for prediction

@@ -23,6 +23,8 @@ def NTXent_Loss(x, v, temperature=1.0):
     loss = tf.reduce_mean(loss_x + loss_v)
     return loss
 
+
+# From: https://stackoverflow.com/questions/62793043/tensorflow-implementation-of-nt-xent-contrastive-loss-function
 # Define the contrastive loss function, NT_Xent (Tensorflow version)
 def NT_Xent_tf(zi, zj, tau=1):
     """ Calculates the contrastive loss of the input data using NT_Xent. The
