@@ -8,7 +8,7 @@ from src.augmentationEngine import SimClrAugmentation
 from src.customTraining import TrainingEngine
 from src.models import projectionHead
 from src.models import resnet18
-
+from src.LARS_optimizer import MomentumLARS
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
 if len(physical_devices) > 0:
@@ -46,7 +46,16 @@ def train_model_default(model, training_data, training_labels):
 
 def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
-    training_module.optimizer = tf.keras.optimizers.SGD()
+    #training_module.optimizer = tf.keras.optimizers.SGD()
+    '''
+    training_module.optimizer = LARSOptimizer(
+        4.8,
+        momentum=0.9,
+        weight_decay=10e-6,
+        exclude_from_weight_decay=['batch_normalization', 'bias',
+                                   'head_supervised'])
+    '''
+    training_module.optimizer = MomentumLARS()
     training_module.loss_object = lossFunctions.NT_Xent_loss
     training_module.data_augmentation_module = SimClrAugmentation()
     # training_module.data_augmentation_module = TestAugmentation()
