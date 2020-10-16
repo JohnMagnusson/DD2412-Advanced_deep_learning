@@ -2,8 +2,7 @@ import tensorflow as tf
 
 LARGE_NUM = 1e9
 
-
-def NTXent_Loss(x, v, temperature=1.0):
+def NTXent_Loss_test1(x, v, temperature=1.0):
     batch_size = tf.shape(x)[0]
     masks = tf.one_hot(tf.range(batch_size), batch_size)
     labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
@@ -26,7 +25,8 @@ def NTXent_Loss(x, v, temperature=1.0):
 
 # From: https://stackoverflow.com/questions/62793043/tensorflow-implementation-of-nt-xent-contrastive-loss-function
 # Define the contrastive loss function, NT_Xent (Tensorflow version)
-def NT_Xent_tf(zi, zj, tau=1):
+#@tf.function
+def NT_Xent_tf_test2(zi, zj, tau=1):
     """ Calculates the contrastive loss of the input data using NT_Xent. The
     equation can be found in the paper: https://arxiv.org/pdf/2002.05709.pdf
     (This is the Tensorflow implementation of the standard numpy version found
@@ -64,5 +64,53 @@ def NT_Xent_tf(zi, zj, tau=1):
 
     # Divide by the total number of samples
     loss /= z.shape[0]
+
+    return loss
+
+
+def  NT_Xent_loss(zi, zj,
+                 hidden_norm=True,
+                 temperature=1.0,
+                 tpu_context=None,
+                 weights=1.0):
+    """Compute loss for model.
+    Args:
+    hidden: hidden vector (`Tensor`) of shape (2 * bsz, dim).
+    hidden_norm: whether or not to use normalization on the hidden vector.
+    temperature: a `floating` number for temperature scaling.
+    tpu_context: context information for tpu.
+    weights: a weighting number or vector.
+    Returns:
+    A loss scalar.
+    The logits for contrastive prediction task.
+    The labels for contrastive prediction task.
+    """
+    # Get (normalized) hidden1 and hidden2.
+
+    hidden = tf.cast(tf.concat((zi, zj), 0), dtype=tf.float32)
+
+    if hidden_norm:
+        hidden = tf.math.l2_normalize(hidden, -1)
+    hidden1, hidden2 = tf.split(hidden, 2, 0)
+    batch_size = tf.shape(hidden1)[0]
+
+
+    hidden1_large = hidden1
+    hidden2_large = hidden2
+    labels = tf.one_hot(tf.range(batch_size), batch_size * 2)
+    masks = tf.one_hot(tf.range(batch_size), batch_size)
+
+    logits_aa = tf.matmul(hidden1, hidden1_large, transpose_b=True) / temperature
+    logits_aa = logits_aa - masks * LARGE_NUM
+    logits_bb = tf.matmul(hidden2, hidden2_large, transpose_b=True) / temperature
+    logits_bb = logits_bb - masks * LARGE_NUM
+    logits_ab = tf.matmul(hidden1, hidden2_large, transpose_b=True) / temperature
+    logits_ba = tf.matmul(hidden2, hidden1_large, transpose_b=True) / temperature
+
+    loss_a = tf.compat.v1.losses.softmax_cross_entropy(
+      labels, tf.concat([logits_ab, logits_aa], 1), weights=weights)
+    loss_b = tf.compat.v1.losses.softmax_cross_entropy(
+      labels, tf.concat([logits_ba, logits_bb], 1), weights=weights)
+    loss = loss_a + loss_b
 
     return loss

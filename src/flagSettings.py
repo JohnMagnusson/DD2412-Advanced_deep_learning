@@ -9,7 +9,7 @@ num_classes = 10    # CIFAR-10
 input_shape = (32, 32, 3)
 
 # Training settings
-nr_epochs = 1
+nr_epochs = 10
 batch_size = 128
 
 # Projection head settings
