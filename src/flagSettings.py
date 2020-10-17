@@ -14,9 +14,17 @@ temperature = 0.1       # Temperature in the loss function
 batch_size = 256
 weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
-nr_epochs = 3
+nr_epochs = 100
 
 # Image augmentation settings
 color_jitter_strength = 0.5
+use_gaussian_blue = False
+
+# Fine-tune settings
+percentage_fine_tune_data = 0.01
+fine_tune_batch_size = 256
+fine_tune_momentum = 0.9
+fine_tune_lr = 0.05 # Following this formula (0.05 * batch_size/ 256)
+fine_tune_nr_epochs = 60    # For 1% data => 60 epochs, 10% data => 30 epochs
 
 

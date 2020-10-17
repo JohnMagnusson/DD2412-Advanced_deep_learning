@@ -76,6 +76,11 @@ class TrainingEngine:
         List of the loss over each epoch
 
         """
+
+        # Convert data to tensor format
+        train_data = tf.data.Dataset.from_tensor_slices((tf.cast(train_data[0], dtype=tf.float32), tf.keras.utils.to_categorical(train_data[1], flagSettings.num_classes)))
+        validation_data = tf.data.Dataset.from_tensor_slices((tf.cast(validation_data[0], dtype=tf.float32), tf.keras.utils.to_categorical(validation_data[1], flagSettings.num_classes)))
+
         training_loss = []
         validation_loss = []
         iterationsPerEpoch = math.floor(len(list(train_data))/flagSettings.batch_size)

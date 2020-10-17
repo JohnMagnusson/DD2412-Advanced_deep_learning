@@ -1,12 +1,12 @@
 import sys
 sys.path.append("..")
 
-from src.models.resnet18 import resnet18
-from src.dataManagement import load_cifar10
-from src.customTraining import TrainingEngine
+from models.resnet18 import resnet18
+from dataManagement import load_cifar10
+from customTraining import TrainingEngine
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
-from src.modelFunctions import build_normal_resnet, build_simCLR_model
+from modelFunctions import build_normal_resnet, build_simCLR_model
 import flagSettings
 
 

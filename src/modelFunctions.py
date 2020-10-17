@@ -3,12 +3,12 @@ import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 
-from src import flagSettings
-from src.LARS_optimizer import MomentumLARS
-from src.augmentationEngine import SimClrAugmentation
-from src.customTraining import TrainingEngine
-from src.models import projectionHead
-from src.models import resnet18
+import flagSettings
+from LARS_optimizer import MomentumLARS
+from augmentationEngine import SimClrAugmentation
+from customTraining import TrainingEngine
+from models import projectionHead
+from models import resnet18
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -45,7 +45,7 @@ def train_model_default(model, training_data, training_labels):
     return model, []
 
 
-def train_model(model, train_data, test_data):
+def train_model(model, train_data, val_data):
     training_module = TrainingEngine(model)
     '''
     training_module.optimizer = LARSOptimizer(
@@ -55,19 +55,19 @@ def train_model(model, train_data, test_data):
         exclude_from_weight_decay=['batch_normalization', 'bias',
                                    'head_supervised'])
     '''
+    # lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    #     initial_learning_rate=1e-2,
+    #     decay_steps=10000,
+    #     decay_rate=0.9)
+
     training_module.optimizer = MomentumLARS(learning_rate=flagSettings.learning_rate
                                              , weight_decay=flagSettings.weight_decay)
     training_module.loss_object = flagSettings.loss_function
     training_module.data_augmentation_module = SimClrAugmentation()
-    # training_module.data_augmentation_module = TestAugmentation()
     training_loss, validation_loss = training_module.fit(train_data,
-                                                         test_data,
+                                                         val_data,
                                                          batch_size=flagSettings.batch_size,
                                                          epochs=flagSettings.nr_epochs)
-
-    # scores = training_module.evaluate(test_data)
-    # print('Test loss:', scores[1])
-    # print('Test accuracy:', scores[0])
 
     return model, training_loss, validation_loss
 
@@ -81,12 +81,55 @@ def plot_loss(training_loss, validation_loss):
     plt.grid(True)
     plt.show()
 
+def plot_fine_tuning(history):
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper right')
+    plt.show()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper right')
+    plt.show()
+
 
 def evaluate_model(trainedModel, testData, testLabels):
     scores = trainedModel.evaluate(x=testData, y=testLabels, verbose=1)
     print("%s: %.2f%% on the test set" % (trainedModel.metrics_names[1], scores[1] * 100))
 
 
-def fine_tune_model(model):
+def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset):
     # Add dense with softmax for prediction
-    return model
+    if type_of_head == "nonlinear":
+        fine_tune_at = -4
+    elif type_of_head == "linear":
+        fine_tune_at = -2
+    elif type_of_head == "none":
+        fine_tune_at = -1
+    else:
+        raise Exception("This type of head is not supported: " + str(type_of_head))
+
+    # inputs = Input(shape=flagSettings.input_shape)
+    # output_model = base_model(inputs)
+    x = base_model.layers[fine_tune_at].output
+    outputs = Dense(flagSettings.num_classes, activation='softmax')(x)
+    model = Model(inputs=base_model.input, outputs=outputs)
+    model.compile(loss="sparse_categorical_crossentropy",
+                  metrics=["accuracy"],
+                  optimizer=tf.keras.optimizers.SGD(learning_rate=flagSettings.learning_rate,
+                                                    momentum=flagSettings.fine_tune_momentum))
+
+    model.summary()
+
+    history_fine_tune = model.fit(x=train_dataset[0], y=train_dataset[1],
+                                  epochs=flagSettings.fine_tune_nr_epochs,
+                                  validation_data=validation_dataset,
+                                  shuffle=True)
+
+    return model, history_fine_tune

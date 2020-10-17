@@ -1,38 +1,67 @@
 # This file should provide functions to get datasets in a trivial way
+import random
 
-import pickle
 import numpy as np
-import flagSettings
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 
-def get_data_set():
+import flagSettings
 
+
+def get_data_set(validation_ratio=0.2):
     if flagSettings.data_set == "cifar-10":
-
-        x_train, y_train, x_test, y_test = load_cifar10(5)
-        train_data = tf.data.Dataset.from_tensor_slices((tf.cast(x_train, dtype=tf.float32), tf.keras.utils.to_categorical(y_train, 10)))
-        test_data = tf.data.Dataset.from_tensor_slices((tf.cast(x_test, dtype=tf.float32), tf.keras.utils.to_categorical(y_test, 10)))
-        return train_data, test_data
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+        x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=validation_ratio, random_state=1,
+                                                          shuffle=False)
+        return (x_train, y_train), (x_val, y_val), (x_test, y_test)
     else:
         raise NotImplemented("This dataset is not implemented yet : " + flagSettings.data_set)
 
-def load_cifar10(nrBatches=5):
-    training_data = []
-    training_labels = []
-    for i in range(1, (nrBatches+1)):
-        x, y = load_cifar10_batch("data_batch_" + str(i))
-        training_data.extend(x)
-        training_labels.extend(y)
 
-    test_data, test_labels = load_cifar10_batch("test_batch")
+def balanced_subsample(dataset, subsample_size=0.1):
+    """
+    Takes in a dataset and returns a subset of it given subsample_size. The class representation is forced to be the same
+    :param dataset:
+    :param subsample_size:
+    :return:
+    """
 
-    return np.array(training_data), np.array(training_labels), test_data, np.array(test_labels)
+    x = dataset[0]
+    y = dataset[1]
 
-def load_cifar10_batch(batch_name):
-    with open("../datasets/cifar-10/" + str(batch_name), mode='rb') as file:
-        # note the encoding type is 'latin1'
-        batch = pickle.load(file, encoding='latin1')
+    # Calculate the calculate subsample
+    desired_amount = x.shape[0] * subsample_size
+    desired_amount_per_class = round(desired_amount / flagSettings.num_classes)
 
-    data = batch['data'].reshape((len(batch['data']), 3, 32, 32)).transpose(0, 2, 3, 1)
-    labels = batch['labels']
-    return data, labels
+    # Takes two list and shuffles them together in order
+    def shuffle_data(input1, input2):
+        zipped = list(zip(input1, input2))
+        random.shuffle(zipped)
+        tmp = zip(*zipped)
+        return tmp
+
+    classes = []
+    # Store classes individually
+    for i in np.unique(y):
+        indices = np.where(np.any(y == i, axis=1))
+        shuffled_x, shuffled_y = shuffle_data(x[indices], y[indices])  # Shuffle the data
+        classes.append((shuffled_x, shuffled_y))
+
+    subsample_data_x = []
+    subsample_data_y = []
+    for i in np.unique(y):
+        random_class_x = classes[i][0][:desired_amount_per_class]  # We can take the n first as it is shuffled
+        random_class_y = classes[i][1][:desired_amount_per_class]
+        subsample_data_x.extend(random_class_x)
+        subsample_data_y.extend(random_class_y)
+    subsample_data_x = np.array(subsample_data_x)
+    subsample_data_y = np.array(subsample_data_y)
+
+    # Shuffle order, else it will be returned in class order
+    subsample_data_x, subsample_data_y = shuffle_data(subsample_data_x, subsample_data_y)
+
+    # To array format
+    subsample_data_x = np.array(subsample_data_x)
+    subsample_data_y = np.array(subsample_data_y)
+
+    return subsample_data_x, subsample_data_y

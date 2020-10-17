@@ -6,7 +6,6 @@ import cv2
 from PIL import Image, ImageOps
 import cv2
 import tensorflow as tf
-import src.dataManagement
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -129,14 +128,15 @@ def randomApply(image):
         image = colorDrop(image)
     else:
         pass
-    
-    #apply gaussian blur
-    rand = random.randrange(0, 100)
-    if rand <50:
-        std = random.uniform(.1, 2)
-        image = gaussianBlur(image,std)
-    else:
-        pass
+
+    if flagSettings.use_gaussian_blue:
+        #apply gaussian blur
+        rand = random.randrange(0, 100)
+        if rand <50:
+            std = random.uniform(.1, 2)
+            image = gaussianBlur(image,std)
+        else:
+            pass
     
     return image
     

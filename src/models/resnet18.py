@@ -3,7 +3,7 @@ from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import GlobalAveragePooling2D, Input, MaxPool2D
 
-import src.flagSettings
+import flagSettings
 
 
 def resnet_layer(inputs,
@@ -42,7 +42,7 @@ def resnet18(input_shape):
     num_filters = 64
     inputs = Input(shape=input_shape)
 
-    if src.flagSettings.data_set == "cifar-10":
+    if flagSettings.data_set == "cifar-10":
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1)
     else:
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7))

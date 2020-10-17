@@ -1,7 +1,7 @@
 #abstact class representing a sequence of augmentation transformations
 
 
-from src.dataAugmentations import *
+from dataAugmentations import *
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
