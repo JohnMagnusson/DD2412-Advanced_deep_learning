@@ -7,10 +7,10 @@ train_data, test_data = get_data_set()
 model = build_simCLR_model(encoder_network="resnet-18", projection_head_mode="nonlinear")
 # model = build_normal_resnet()
 
-trained_model, trainingStats = train_model(model, train_data, test_data)
+trained_model, training_loss, validation_loss = train_model(model, train_data, test_data)
 
 model.save_weights("simCLR_model_weights")
 # evaluationStats = evaluate_model(trained_model, test_data, test_labels)
-# plot_loss(trainingStats)
+plot_loss(training_loss, validation_loss)
 
 

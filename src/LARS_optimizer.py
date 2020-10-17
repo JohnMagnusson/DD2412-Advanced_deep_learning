@@ -1,4 +1,5 @@
-import tensorflow.compat.v2 as tf
+# import tensorflow.compat.v2 as tf
+import tensorflow as  tf
 
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops

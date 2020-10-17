@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 LARGE_NUM = 1e9
+import flagSettings
 
 def NTXent_Loss_test1(x, v, temperature=1.0):
     batch_size = tf.shape(x)[0]
@@ -87,6 +88,7 @@ def  NT_Xent_loss(zi, zj,
     """
     # Get (normalized) hidden1 and hidden2.
 
+    temperature = flagSettings.temperature
     hidden = tf.cast(tf.concat((zi, zj), 0), dtype=tf.float32)
 
     if hidden_norm:

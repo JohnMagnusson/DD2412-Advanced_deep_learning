@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import tensorflow_addons as tfa
+import flagSettings
 
 def cropResize(image):
     """Crops image to random size and resizes to original shape
@@ -118,7 +119,7 @@ def randomApply(image):
     #apply color jitter
     rand = random.randrange(0, 100)
     if rand <80:
-        image = colorJitter(image, s=1)
+        image = colorJitter(image, flagSettings.color_jitter_strength)
     else:
         pass
     

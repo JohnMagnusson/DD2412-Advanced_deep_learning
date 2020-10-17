@@ -1,10 +1,13 @@
 import tensorflow as tf
 from tqdm import tqdm
+import math
+
+import flagSettings
 
 
 class TrainingEngine:
 
-    def __init__(self, model, batch_size=100, data_augmentation_module=None):
+    def __init__(self, model, batch_size=flagSettings.batch_size, data_augmentation_module=None):
 
         self.model = model
 
@@ -35,7 +38,7 @@ class TrainingEngine:
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         self.train_loss(loss)
-        #self.train_accuracy(labels, predictions)
+        # self.train_accuracy(labels, predictions)
 
     @tf.function
     def __test_step(self, images_augm_1, images_augm_2):
@@ -45,7 +48,6 @@ class TrainingEngine:
         predictions_augm_2 = self.model(images_augm_2)
         t_loss = self.loss_object(predictions_augm_1, predictions_augm_2)
         self.test_loss(t_loss)
-        #self.test_accuracy(labels, predictions)
 
     def fit(self, train_data, validation_data, batch_size=100, epochs=20, shuffle=True, data_augmentation=False,
             verbose=True):
@@ -71,14 +73,15 @@ class TrainingEngine:
 
         Returns
         -------
-        List of the loss over each iteration
+        List of the loss over each epoch
 
         """
-        loss_over_training = []
+        training_loss = []
+        validation_loss = []
+        iterationsPerEpoch = math.floor(len(list(train_data))/flagSettings.batch_size)
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
-            self.train_accuracy.reset_states()
-            # self.test_loss.reset_states()
+            # self.train_accuracy.reset_states()
             # self.test_accuracy.reset_states()
 
             if shuffle:
@@ -86,35 +89,29 @@ class TrainingEngine:
             else:
                 epoch_train_data = train_data
 
-
             augmented_train_data = self.data_augmentation_module.transform(epoch_train_data)
-            augmented_val_data = self.data_augmentation_module.transform(validation_data)
             batched_train_data = augmented_train_data.batch(batch_size)
             for iteration, (_, batch_x_1, batch_x_2, batch_y) in enumerate(batched_train_data):
                 self.__train_step(batch_x_1, batch_x_2)
-                loss_over_training.append(self.train_loss.result().numpy())
-                #batched_val_data = augmented_val_data.batch(batch_size)
-                #for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
-                #    self.__test_step(batch_x1_val, batch_x2_val)
                 if verbose:
-                    template = 'Epoch {}, Iteration {}, Loss: {}, Validation Loss: {} '
-                    print(template.format(epoch + 1,
-                                          iteration,
+                    template = 'Epoch {}/{}, Iteration {}/{}, Loss: {}, Previous epoch validation Loss: {} '
+                    print(template.format(epoch + 1, flagSettings.nr_epochs, iteration, iterationsPerEpoch,
                                           self.train_loss.result(),
                                           self.test_loss.result()))
 
+            self.test_loss.reset_states()
+            augmented_val_data = self.data_augmentation_module.transform(validation_data)
+            batched_val_data = augmented_val_data.batch(batch_size)
+            for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
+                self.__test_step(batch_x1_val, batch_x2_val)
+            if verbose:
+                template = 'Epoch {}/{}, Validation Loss: {} '
+                print(template.format(epoch + 1, flagSettings.nr_epochs, self.test_loss.result()))
 
-            # if verbose:
-            #     template = 'Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}, ' \
-            #                'Learning rate: {}'
-            #     print(template.format(epoch + 1,
-            #                           self.train_loss.result(),
-            #                           self.train_accuracy.result() * 100,
-            #                           self.test_loss.result(),
-            #                           self.test_accuracy.result() * 100,
-            #                           self.optimizer.lr.numpy()))
-
-        return loss_over_training
+            # Save the last loss for the epoch and the validation loss for the epoch
+            training_loss.append(self.train_loss.result().numpy())
+            validation_loss.append(self.test_loss.result().numpy())
+        return training_loss, validation_loss
 
     def evaluate(self, test_data):
         """

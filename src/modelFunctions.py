@@ -3,12 +3,13 @@ import tensorflow as tf
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 
-from src import flagSettings, lossFunctions
+from src import flagSettings
+from src.LARS_optimizer import MomentumLARS
 from src.augmentationEngine import SimClrAugmentation
 from src.customTraining import TrainingEngine
 from src.models import projectionHead
 from src.models import resnet18
-from src.LARS_optimizer import MomentumLARS
+
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
 if len(physical_devices) > 0:
@@ -46,7 +47,6 @@ def train_model_default(model, training_data, training_labels):
 
 def train_model(model, train_data, test_data):
     training_module = TrainingEngine(model)
-    #training_module.optimizer = tf.keras.optimizers.SGD()
     '''
     training_module.optimizer = LARSOptimizer(
         4.8,
@@ -55,26 +55,27 @@ def train_model(model, train_data, test_data):
         exclude_from_weight_decay=['batch_normalization', 'bias',
                                    'head_supervised'])
     '''
-    training_module.optimizer = MomentumLARS()
-    training_module.loss_object = lossFunctions.NT_Xent_loss
+    training_module.optimizer = MomentumLARS(learning_rate=flagSettings.learning_rate
+                                             , weight_decay=flagSettings.weight_decay)
+    training_module.loss_object = flagSettings.loss_function
     training_module.data_augmentation_module = SimClrAugmentation()
     # training_module.data_augmentation_module = TestAugmentation()
-    loss = training_module.fit(train_data,
-                               test_data,
-                               batch_size=flagSettings.batch_size,
-                               epochs=flagSettings.nr_epochs)
+    training_loss, validation_loss = training_module.fit(train_data,
+                                                         test_data,
+                                                         batch_size=flagSettings.batch_size,
+                                                         epochs=flagSettings.nr_epochs)
 
     # scores = training_module.evaluate(test_data)
     # print('Test loss:', scores[1])
     # print('Test accuracy:', scores[0])
 
-    return model, loss
+    return model, training_loss, validation_loss
 
 
-def plot_loss(trainingStats):
-    plt.plot(trainingStats, label='Loss')
-    # plt.plot(trainingStats[1], label='validation loss')
-    plt.xlabel('Iterations')
+def plot_loss(training_loss, validation_loss):
+    plt.plot(training_loss, label='Training loss')
+    plt.plot(validation_loss, label='Validation loss')
+    plt.xlabel('Epochs')
     plt.ylabel('Error [NTXent Loss]')
     plt.legend()
     plt.grid(True)
