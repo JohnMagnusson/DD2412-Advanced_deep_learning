@@ -109,9 +109,7 @@ def randomApply(image):
     rand = random.randrange(0, 100)
     if rand <50:
         image = flip(image)
-    else:
-        pass
-    
+
     #apply crop
     image = cropResize(image)
     
@@ -119,17 +117,13 @@ def randomApply(image):
     rand = random.randrange(0, 100)
     if rand <80:
         image = colorJitter(image, flagSettings.color_jitter_strength)
-    else:
-        pass
-    
+
     #apply color drop
     rand = random.randrange(0, 100)
     if rand < 20:
         image = colorDrop(image)
-    else:
-        pass
 
-    if flagSettings.use_gaussian_blue:
+    if flagSettings.use_gaussian_blur:
         #apply gaussian blur
         rand = random.randrange(0, 100)
         if rand <50:

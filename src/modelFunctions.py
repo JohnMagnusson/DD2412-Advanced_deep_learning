@@ -1,3 +1,5 @@
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.layers import Dense
@@ -47,21 +49,17 @@ def train_model_default(model, training_data, training_labels):
 
 def train_model(model, train_data, val_data):
     training_module = TrainingEngine(model)
-    '''
-    training_module.optimizer = LARSOptimizer(
-        4.8,
-        momentum=0.9,
-        weight_decay=10e-6,
-        exclude_from_weight_decay=['batch_normalization', 'bias',
-                                   'head_supervised'])
-    '''
-    # lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    #     initial_learning_rate=1e-2,
-    #     decay_steps=10000,
-    #     decay_rate=0.9)
 
-    training_module.optimizer = MomentumLARS(learning_rate=flagSettings.learning_rate
-                                             , weight_decay=flagSettings.weight_decay)
+    # Todo make this compatible with warmup phase
+    # Creating the cosine_decay learning rate schedule
+    global_step = tf.compat.v1.train.get_or_create_global_step()
+    nr_decay_steps = (train_data[0].shape[0] * flagSettings.nr_epochs) // flagSettings.batch_size
+    lr_decay_fn = tf.compat.v1.train.cosine_decay(flagSettings.learning_rate, global_step, nr_decay_steps)
+
+    training_module.optimizer = MomentumLARS(learning_rate=lr_decay_fn,
+                                             weight_decay=flagSettings.weight_decay)
+                                             # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
+
     training_module.loss_object = flagSettings.loss_function
     training_module.data_augmentation_module = SimClrAugmentation()
     training_loss, validation_loss = training_module.fit(train_data,

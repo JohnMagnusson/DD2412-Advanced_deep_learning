@@ -28,7 +28,7 @@ class MomentumLARS(tf.keras.optimizers.Optimizer):
     @typechecked
     def __init__(
         self,
-        learning_rate: float = 0.001,
+        learning_rate = 0.001,
         momentum: float = 0.9,
         weight_decay: float = 0.0001,
         # The LARS coefficient is a hyperparameter
