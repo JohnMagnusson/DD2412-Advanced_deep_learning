@@ -9,9 +9,11 @@ import flagSettings
 
 class TrainingEngine:
 
-    def __init__(self, model, batch_size=flagSettings.batch_size, data_augmentation_module=None):
+    def __init__(self, model, set_custom_lr=False, batch_size=flagSettings.batch_size, data_augmentation_module=None):
 
         self.model = model
+
+        self.set_custom_lr = set_custom_lr
 
         self.batch_size = batch_size
 
@@ -101,6 +103,9 @@ class TrainingEngine:
             # self.train_accuracy.reset_states()
             # self.test_accuracy.reset_states()
 
+            if self.set_custom_lr:
+                self.optimizer.lr.assign(self.lr_scheduler(epoch))
+            print(self.optimizer.lr.numpy())
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:

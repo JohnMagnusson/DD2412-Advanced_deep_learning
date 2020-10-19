@@ -11,6 +11,7 @@ from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
 from models import projectionHead
 from models import resnet18
+from learningRateSchedules import linear_warm_up_lr
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -56,7 +57,7 @@ def train_model(model, train_data, val_data):
     nr_decay_steps = (train_data[0].shape[0] * flagSettings.nr_epochs) // flagSettings.batch_size
     lr_decay_fn = tf.compat.v1.train.cosine_decay(flagSettings.learning_rate, global_step, nr_decay_steps)
 
-    training_module.optimizer = MomentumLARS(learning_rate=lr_decay_fn,
+    training_module.optimizer = MomentumLARS(learning_rate=linear_warm_up_lr,
                                              weight_decay=flagSettings.weight_decay)
                                              # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
 
@@ -66,6 +67,21 @@ def train_model(model, train_data, val_data):
                                                          val_data,
                                                          batch_size=flagSettings.batch_size,
                                                          epochs=flagSettings.nr_epochs)
+
+    return model, training_loss, validation_loss
+
+
+def warmup_model(model, train_data, val_data):
+    training_module = TrainingEngine(model, set_custom_lr=True)
+
+    training_module.optimizer = MomentumLARS()
+    training_module.lr_scheduler = linear_warm_up_lr
+    training_module.loss_object = flagSettings.loss_function
+    training_module.data_augmentation_module = SimClrAugmentation()
+    training_loss, validation_loss = training_module.fit(train_data,
+                                                         val_data,
+                                                         batch_size=flagSettings.batch_size,
+                                                         epochs=flagSettings.nr_epochs_warmup)
 
     return model, training_loss, validation_loss
 

@@ -16,6 +16,7 @@ weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
 nr_epochs = 30
 use_checkpointing = True
+nr_epochs_warmup = 10
 
 
 
