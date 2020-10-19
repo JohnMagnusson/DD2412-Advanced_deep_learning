@@ -14,7 +14,10 @@ temperature = 0.1  # Temperature in the loss function
 batch_size = 256
 weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
-nr_epochs = 100
+nr_epochs = 30
+use_checkpointing = True
+
+
 
 # Image augmentation settings
 color_jitter_strength = 0.5

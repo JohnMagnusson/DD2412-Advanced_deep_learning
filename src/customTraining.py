@@ -1,6 +1,8 @@
+import datetime
+import math
+
 import tensorflow as tf
 from tqdm import tqdm
-import math
 
 import flagSettings
 
@@ -26,6 +28,12 @@ class TrainingEngine:
         self.test_accuracy = tf.keras.metrics.CategoricalAccuracy(name='test_accuracy')
 
         self.data_augmentation_module = data_augmentation_module
+
+        self.checkpoint_name_prefix = self.__get_current_time()
+
+    def __get_current_time(self):
+        now = datetime.datetime.now()
+        return now.strftime("%Y-%m-%d_%H-%M-%S")
 
     @tf.function
     def __train_step(self, images_augm_1, images_augm_2):
@@ -78,12 +86,16 @@ class TrainingEngine:
         """
 
         # Convert data to tensor format
-        train_data = tf.data.Dataset.from_tensor_slices((tf.cast(train_data[0], dtype=tf.float32), tf.keras.utils.to_categorical(train_data[1], flagSettings.num_classes)))
-        validation_data = tf.data.Dataset.from_tensor_slices((tf.cast(validation_data[0], dtype=tf.float32), tf.keras.utils.to_categorical(validation_data[1], flagSettings.num_classes)))
+        train_data = tf.data.Dataset.from_tensor_slices((tf.cast(train_data[0], dtype=tf.float32),
+                                                         tf.keras.utils.to_categorical(train_data[1],
+                                                                                       flagSettings.num_classes)))
+        validation_data = tf.data.Dataset.from_tensor_slices((tf.cast(validation_data[0], dtype=tf.float32),
+                                                              tf.keras.utils.to_categorical(validation_data[1],
+                                                                                            flagSettings.num_classes)))
 
         training_loss = []
         validation_loss = []
-        iterationsPerEpoch = math.floor(len(list(train_data))/flagSettings.batch_size)
+        iterationsPerEpoch = math.floor(len(list(train_data)) / flagSettings.batch_size)
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
             # self.train_accuracy.reset_states()
@@ -109,9 +121,15 @@ class TrainingEngine:
             batched_val_data = augmented_val_data.batch(batch_size)
             for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
                 self.__test_step(batch_x1_val, batch_x2_val)
+
             if verbose:
                 template = 'Epoch {}/{}, Validation Loss: {} '
                 print(template.format(epoch + 1, flagSettings.nr_epochs, self.test_loss.result()))
+
+            if epoch > 1 and self.test_loss.result() < min(validation_loss):
+                checkpoint_name = self.checkpoint_name_prefix + "_" + str(self.test_loss.result().numpy())
+                print("New lowest validation loss found. Saving weights as: " + checkpoint_name)
+                self.model.save_weights("checkpoint_models/" + checkpoint_name)
 
             # Save the last loss for the epoch and the validation loss for the epoch
             training_loss.append(self.train_loss.result().numpy())
