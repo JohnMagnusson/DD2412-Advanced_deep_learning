@@ -48,7 +48,6 @@ class TrainingEngine:
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         self.train_loss(loss)
-        # self.train_accuracy(labels, predictions)
 
     @tf.function
     def __test_step(self, images_augm_1, images_augm_2):
@@ -94,6 +93,9 @@ class TrainingEngine:
         validation_data = tf.data.Dataset.from_tensor_slices((tf.cast(validation_data[0], dtype=tf.float32),
                                                               tf.keras.utils.to_categorical(validation_data[1],
                                                                                             flagSettings.num_classes)))
+        # We augment the data once so we test on the same during training. Maybe this should not be augmented?
+        augmented_val_data = self.data_augmentation_module.transform(validation_data)
+        batched_val_data = augmented_val_data.batch(batch_size)
 
         training_loss = []
         validation_loss = []
@@ -105,7 +107,7 @@ class TrainingEngine:
 
             if self.set_custom_lr:
                 self.optimizer.lr.assign(self.lr_scheduler(epoch))
-            #print(self.optimizer.lr.numpy())
+            # print(self.optimizer.lr.numpy())
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:
@@ -117,19 +119,17 @@ class TrainingEngine:
                 self.__train_step(batch_x_1, batch_x_2)
                 if verbose:
                     template = 'Epoch {}/{}, Iteration {}/{}, Loss: {}, Previous epoch validation Loss: {} '
-                    print(template.format(epoch + 1, flagSettings.nr_epochs, iteration, iterationsPerEpoch,
+                    print(template.format(epoch + 1, epochs, iteration, iterationsPerEpoch,
                                           self.train_loss.result(),
                                           self.test_loss.result()))
 
             self.test_loss.reset_states()
-            augmented_val_data = self.data_augmentation_module.transform(validation_data)
-            batched_val_data = augmented_val_data.batch(batch_size)
             for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
                 self.__test_step(batch_x1_val, batch_x2_val)
 
             if verbose:
                 template = 'Epoch {}/{}, Validation Loss: {} '
-                print(template.format(epoch + 1, flagSettings.nr_epochs, self.test_loss.result()))
+                print(template.format(epoch + 1, epochs, self.test_loss.result()))
 
             if epoch > 1 and self.test_loss.result() < min(validation_loss):
                 checkpoint_name = self.checkpoint_name_prefix + "_" + str(self.test_loss.result().numpy())
