@@ -1,8 +1,8 @@
 from dataManagement import *
 from modelFunctions import *
 
-do_train_new_model = True
-do_fine_tune_model = False
+do_train_new_model = False
+do_fine_tune_model = True
 
 
 train_data, val_data, test_data = get_data_set()

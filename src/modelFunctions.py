@@ -116,6 +116,7 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
     # inputs = Input(shape=flagSettings.input_shape)
     # output_model = base_model(inputs)
     x = base_model.layers[fine_tune_at].output
+    base_model.trainable = False
     outputs = Dense(flagSettings.num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=outputs)
     model.compile(loss="sparse_categorical_crossentropy",
