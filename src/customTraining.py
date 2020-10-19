@@ -105,7 +105,7 @@ class TrainingEngine:
 
             if self.set_custom_lr:
                 self.optimizer.lr.assign(self.lr_scheduler(epoch))
-            print(self.optimizer.lr.numpy())
+            #print(self.optimizer.lr.numpy())
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:
