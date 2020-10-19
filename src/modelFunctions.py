@@ -57,7 +57,7 @@ def train_model(model, train_data, val_data):
     nr_decay_steps = (train_data[0].shape[0] * flagSettings.nr_epochs) // flagSettings.batch_size
     lr_decay_fn = tf.compat.v1.train.cosine_decay(flagSettings.learning_rate, global_step, nr_decay_steps)
 
-    training_module.optimizer = MomentumLARS(learning_rate=linear_warm_up_lr,
+    training_module.optimizer = MomentumLARS(learning_rate=lr_decay_fn,
                                              weight_decay=flagSettings.weight_decay)
                                              # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
 
