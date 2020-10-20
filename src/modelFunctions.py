@@ -1,17 +1,16 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import numpy as np
+import seaborn as sns
+from sklearn.manifold import TSNE
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 
-import flagSettings
 from LARS_optimizer import MomentumLARS
 from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
+from learningRateSchedules import *
 from models import projectionHead
 from models import resnet18
-from learningRateSchedules import *
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -52,7 +51,7 @@ def train_model(model, train_data, val_data):
     training_module = TrainingEngine(model, set_custom_lr=True)
 
     training_module.optimizer = MomentumLARS(weight_decay=flagSettings.weight_decay)
-                                             # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
+    # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
 
     training_module.lr_scheduler = Cosine_decay_lr_scheduler(decay_steps=flagSettings.nr_epochs,
                                                              initial_learning_rate=flagSettings.learning_rate)
@@ -89,6 +88,7 @@ def plot_loss(training_loss, validation_loss):
     plt.legend()
     plt.grid(True)
     plt.show()
+
 
 def plot_fine_tuning(history):
     plt.plot(history.history['accuracy'])
@@ -143,3 +143,42 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
                                   shuffle=True)
 
     return model, history_fine_tune
+
+
+def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, projection_head_mode="nonlinear"):
+    """
+    Visualizes how the model has learned the different classes in the data set
+    :param model: The model that should visualize its idea of the data
+    :param dataset: The dataset to visualize
+    :param nr_sample_to_visualize: How many samples that shoudl be displayed
+    :param projection_head_mode: If the model has any head, it will remove it
+    :return: None
+    """
+
+    # Visualization of the representations
+    def plot_data_representation(x_in_low_space, labels):
+        fig = plt.figure()
+        sns.set_style("darkgrid")
+        labels = labels.reshape(-1)
+        nr_colors = len(np.unique(labels))
+        sns.scatterplot(x=x_in_low_space[:, 0], y=x_in_low_space[:, 1], hue=labels, legend='full',
+                        palette=sns.color_palette("bright", nr_colors))
+        plt.show()
+        return fig
+
+    if projection_head_mode == "linear":
+        projection = Model(model.input, model.layers[-2].output)
+    elif projection_head_mode == "nonlinear":
+        projection = Model(model.input, model.layers[-4].output)
+    elif projection_head_mode == "none":
+        projection = Model(model.input, model.layers[-1].output)
+    else:
+        raise Exception("This mode for the projection head is not supported: " + str(projection_head_mode))
+
+    tsne = TSNE()
+    projection.summary()
+
+    x, y = (dataset[0][:nr_sample_to_visualize], dataset[1][:nr_sample_to_visualize])
+    x_features = projection.predict(x)
+    x_in_low_space = tsne.fit_transform(x_features)
+    fig = plot_data_representation(x_in_low_space, y)

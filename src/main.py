@@ -1,9 +1,10 @@
 from dataManagement import *
 from modelFunctions import *
 
-do_warmup_new_model = True
-do_train_new_model = True
-do_fine_tune_model = True
+do_warmup_new_model = False
+do_train_new_model = False
+do_fine_tune_model = False
+do_evaluation_on_model = True
 
 train_data, val_data, test_data = get_data_set()
 
@@ -36,4 +37,9 @@ if do_fine_tune_model:
     plot_fine_tuning(history_fine_tune)
     fine_tuned_model.save_weights("finetuned_models/simCLR_model_weights_3")
     print("Done with fine-tuning")
-# evaluationStats = evaluate_model(trained_model, test_data, test_labels)
+
+
+if do_evaluation_on_model:
+    model = build_simCLR_model(encoder_network="resnet-18", projection_head_mode="nonlinear")
+    model.load_weights("saved_models/simCLR_model_weights_3")
+    visualize_model_class_understanding(model, test_data, nr_sample_to_visualize=500, projection_head_mode="nonlinear")
