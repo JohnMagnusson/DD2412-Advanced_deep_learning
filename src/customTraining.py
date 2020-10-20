@@ -106,8 +106,8 @@ class TrainingEngine:
             # self.test_accuracy.reset_states()
 
             if self.set_custom_lr:
-                self.optimizer.lr.assign(self.lr_scheduler(epoch))
-            # print(self.optimizer.lr.numpy())
+                self.optimizer.lr.assign(self.lr_scheduler.get_learning_rate(epoch))
+            print(self.optimizer.lr.numpy())
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:

@@ -11,7 +11,7 @@ from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
 from models import projectionHead
 from models import resnet18
-from learningRateSchedules import linear_warm_up_lr
+from learningRateSchedules import *
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -29,7 +29,7 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
 
-    sim_clr.summary()
+    # sim_clr.summary()
     return sim_clr
 
 
@@ -49,18 +49,13 @@ def train_model_default(model, training_data, training_labels):
 
 
 def train_model(model, train_data, val_data):
-    training_module = TrainingEngine(model)
+    training_module = TrainingEngine(model, set_custom_lr=True)
 
-    # Todo make this compatible with warmup phase
-    # Creating the cosine_decay learning rate schedule
-    global_step = tf.compat.v1.train.get_or_create_global_step()
-    nr_decay_steps = (train_data[0].shape[0] * flagSettings.nr_epochs) // flagSettings.batch_size
-    lr_decay_fn = tf.compat.v1.train.cosine_decay(flagSettings.learning_rate, global_step, nr_decay_steps)
-
-    training_module.optimizer = MomentumLARS(learning_rate=lr_decay_fn,
-                                             weight_decay=flagSettings.weight_decay)
+    training_module.optimizer = MomentumLARS(weight_decay=flagSettings.weight_decay)
                                              # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
 
+    training_module.lr_scheduler = Cosine_decay_lr_scheduler(decay_steps=flagSettings.nr_epochs,
+                                                             initial_learning_rate=flagSettings.learning_rate)
     training_module.loss_object = flagSettings.loss_function
     training_module.data_augmentation_module = SimClrAugmentation()
     training_loss, validation_loss = training_module.fit(train_data,
@@ -75,7 +70,7 @@ def warmup_model(model, train_data, val_data):
     training_module = TrainingEngine(model, set_custom_lr=True)
 
     training_module.optimizer = MomentumLARS()
-    training_module.lr_scheduler = linear_warm_up_lr
+    training_module.lr_scheduler = Linear_decay_lr_scheduler()
     training_module.loss_object = flagSettings.loss_function
     training_module.data_augmentation_module = SimClrAugmentation()
     training_loss, validation_loss = training_module.fit(train_data,
@@ -140,7 +135,7 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
                   optimizer=tf.keras.optimizers.SGD(learning_rate=flagSettings.learning_rate,
                                                     momentum=flagSettings.fine_tune_momentum))
 
-    model.summary()
+    # model.summary()
 
     history_fine_tune = model.fit(x=train_dataset[0], y=train_dataset[1],
                                   epochs=flagSettings.fine_tune_nr_epochs,
