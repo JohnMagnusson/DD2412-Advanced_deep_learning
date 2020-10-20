@@ -10,7 +10,7 @@ from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
 from learningRateSchedules import *
 from models import projectionHead
-from models import resnet18
+from models import resnet18, resnet50
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -24,6 +24,9 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
         outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
         sim_clr = Model(inputs=inputs, outputs=outputs)
     elif encoder_network == "resnet-50":
+        inputs, base_model = resnet50.resnet50(input_shape=flagSettings.input_shape)
+        # outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
+        # sim_clr = Model(inputs=inputs, outputs=outputs)
         raise NotImplemented("Not yet implemented")
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
@@ -164,7 +167,6 @@ def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, 
         sns.scatterplot(x=x_in_low_space[:, 0], y=x_in_low_space[:, 1], hue=labels, legend='full',
                         palette=sns.color_palette("bright", nr_colors))
         plt.show()
-        return fig
 
     if projection_head_mode == "linear":
         projection = Model(model.input, model.layers[-2].output)
@@ -181,4 +183,4 @@ def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, 
     x, y = (dataset[0][:nr_sample_to_visualize], dataset[1][:nr_sample_to_visualize])
     x_features = projection.predict(x)
     x_in_low_space = tsne.fit_transform(x_features)
-    fig = plot_data_representation(x_in_low_space, y)
+    plot_data_representation(x_in_low_space, y)

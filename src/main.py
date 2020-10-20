@@ -2,9 +2,9 @@ from dataManagement import *
 from modelFunctions import *
 
 do_warmup_new_model = False
-do_train_new_model = False
+do_train_new_model = True
 do_fine_tune_model = False
-do_evaluation_on_model = True
+do_evaluation_on_model = False
 
 train_data, val_data, test_data = get_data_set()
 
@@ -20,7 +20,6 @@ if do_train_new_model:
     print("Starting real training")
     model = build_simCLR_model(encoder_network="resnet-18", projection_head_mode="nonlinear")
     model.load_weights("warmedup_models/simCLR_model_weights_3_warmedup")
-    # model.load_weights("saved_models/simCLR_model_weights")
     trained_model, training_loss, validation_loss = train_model(model, train_data, val_data)
     plot_loss(training_loss, validation_loss)
     trained_model.save_weights("saved_models/simCLR_model_weights_3")
