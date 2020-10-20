@@ -23,6 +23,10 @@ nr_epochs_warmup = 10
 # Image augmentation settings
 color_jitter_strength = 0.5
 use_gaussian_blur = False
+augmentation_type = 'simclr' #'rand' or 'simclr'
+rand_augs = 3 #how many augs?
+rand_strength = 10 
+
 
 # Fine-tune settings
 percentage_fine_tune_data = 0.01
