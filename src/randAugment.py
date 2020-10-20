@@ -1,9 +1,6 @@
+#using methods from https://arxiv.org/pdf/1909.13719.pdf, https://github.com/szacho/augmix-tf/blob/master/augmix/transformations.py, https://github.com/ildoonet/pytorch-randaugment/blob/master/RandAugment/augmentations.py
 import random
-
-#import PIL, PIL.ImageOps, PIL.ImageEnhance, PIL.ImageDraw
 import numpy as np
-#import torch
-#from PIL import Image
 import tensorflow as tf
 import tensorflow_addons as tfa
 import tensorflow.keras.backend as K
@@ -20,9 +17,8 @@ def sample_level(n):
     return tf.random.uniform(shape=[1], minval=0.1, maxval=n, dtype=tf.float32)
 
 def affine_transform(image, transform_matrix):
-    # input image - is one image of size [dim,dim,3] not a batch of [b,dim,dim,3]
     DIM = image.shape[0]
-    XDIM = DIM%2 #fix for size 331
+    XDIM = DIM%2 
     
     x = tf.repeat(tf.range(DIM//2,-DIM//2,-1), DIM)
     y = tf.tile(tf.range(-DIM//2,DIM//2), [DIM])
@@ -151,9 +147,7 @@ def AutoContrast(img, _):
     img = tf.cast(tf.math.scalar_mul(255, img), tf.int32)
 
     def scale_channel(img):
-        # A possibly cheaper version can be done using cumsum/unique_with_counts
-        # over the histogram values, rather than iterating over the entire image.
-        # to compute mins and maxes.
+
         lo = tf.cast(tf.reduce_min(img), tf.float32)
         hi = tf.cast(tf.reduce_max(img), tf.float32)
 
@@ -174,7 +168,6 @@ def AutoContrast(img, _):
     s2 = scale_channel(img[:, :, 1])
     s3 = scale_channel(img[:, :, 2])
     img = tf.stack([s1, s2, s3], 2)
-    #return tf.cast(tf.clip_by_value(tf.math.divide(img, 255), 0, 1), tf.float32)
     return img
 
 
@@ -231,8 +224,6 @@ def Solarize(img, v):  # [0, 256]
 
 def SolarizeAdd(img, addition=0, threshold=128):
     print("applying SolarizeAdd")
-    #threshold = float_parameter(sample_level(v), 1)
-    #addition = float_parameter(sample_level(v), 0.5)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     addition = tf.cond(rand_var > 0.5, lambda: addition, lambda: -addition)
 
@@ -282,6 +273,7 @@ def Brightness(img, v):  # [0.1,1.9]
 
 
 def Sharpness(img, v):  # [0.1,1.9]
+    #need addons #havn't tested yet
     print("applying Sharpness")
     level = int_parameter(sample_level(v), 2)
     return tfa.image.sharpness(img,level)
@@ -322,7 +314,6 @@ def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
     return image
 
 
-
 def Identity(img, v):
     print("applying Identity")
     return img
@@ -344,54 +335,10 @@ def augment_list():  # 16 oeprations and their ranges
         (Contrast, 0.1, 10.),  # 10
         (Color, 0.1, 10.),  # 11
         (Brightness, 0.1, 10.),  # 12
-        #(Sharpness, 0.1, 10.),  # 13 #need addons
+        (Sharpness, 0.1, 10.),  # 13 #need addons #havn't tested yet
         #(Cutout, 0, 0.2),  # 14 #not in paper
         ]
     return l
-
-
-
-# class Lighting(object):
-#     """Lighting noise(AlexNet - style PCA - based noise)"""
-
-#     def __init__(self, alphastd, eigval, eigvec):
-#         self.alphastd = alphastd
-#         self.eigval = torch.Tensor(eigval)
-#         self.eigvec = torch.Tensor(eigvec)
-
-#     def __call__(self, img):
-#         if self.alphastd == 0:
-#             return img
-
-#         alpha = img.new().resize_(3).normal_(0, self.alphastd)
-#         rgb = self.eigvec.type_as(img).clone()             .mul(alpha.view(1, 3).expand(3, 3))             .mul(self.eigval.view(1, 3).expand(3, 3))             .sum(1).squeeze()
-
-#         return img.add(rgb.view(3, 1, 1).expand_as(img))
-
-
-# class CutoutDefault(object):
-#     """
-#     Reference : https://github.com/quark0/darts/blob/master/cnn/utils.py
-#     """
-#     def __init__(self, length):
-#         self.length = length
-
-#     def __call__(self, img):
-#         h, w = img.size(1), img.size(2)
-#         mask = np.ones((h, w), np.float32)
-#         y = np.random.randint(h)
-#         x = np.random.randint(w)
-
-#         y1 = np.clip(y - self.length // 2, 0, h)
-#         y2 = np.clip(y + self.length // 2, 0, h)
-#         x1 = np.clip(x - self.length // 2, 0, w)
-#         x2 = np.clip(x + self.length // 2, 0, w)
-
-#         mask[y1: y2, x1: x2] = 0.
-#         mask = torch.from_numpy(mask)
-#         mask = mask.expand_as(img)
-#         img *= mask
-#         return img
 
 
 class RandAugment:
