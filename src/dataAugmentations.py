@@ -46,7 +46,7 @@ def gaussianBlur(image,std):
     width, height, color_channels = image.shape
     blured_image = tfa.image.gaussian_filter2d(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
     #blured_image = cv2.GaussianBlur(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
-    return image
+    return blured_image
 
 def flip(image):
     """Applies a horizontal flip
@@ -58,7 +58,10 @@ def flip(image):
     #flipped = cv2.flip(image,1)
     flipped = tf.image.flip_left_right(image)
     return flipped
-    
+
+def rotate(image):
+    pass
+
 def colorJitter(image, s):
     """Applies a color jitter with random brightness, contrast, saturation, and hue
     Args:
@@ -84,6 +87,10 @@ def colorDrop(image):
     image = tf.image.rgb_to_grayscale(image)
     image = tf.tile(image, [1, 1, 3])
     return image
+
+def cut_out(image):
+    pass
+
 
 def visualizeTensorImage(image):
     """Prints the image from a tensor form

@@ -89,7 +89,7 @@ def warmup_model(model, train_data, val_data):
     return model, training_loss, validation_loss
 
 
-def plot_loss(training_loss, validation_loss):
+def plot_loss(training_loss, validation_loss, should_save_figure=False, file_name = ""):
     plt.plot(training_loss, label='Training loss')
     plt.plot(validation_loss, label='Validation loss')
     plt.xlabel('Epochs')
@@ -97,9 +97,11 @@ def plot_loss(training_loss, validation_loss):
     plt.legend()
     plt.grid(True)
     plt.show()
+    if should_save_figure:
+        plt.savefig(file_name+".png")
 
 
-def plot_fine_tuning(history):
+def plot_fine_tuning(history, should_save_figure=False, file_name = ""):
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
     plt.title('model accuracy')
@@ -107,6 +109,9 @@ def plot_fine_tuning(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper right')
     plt.show()
+    if should_save_figure:
+        plt.savefig(file_name+ "-accuracy.png")
+
     # summarize history for loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -115,6 +120,8 @@ def plot_fine_tuning(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper right')
     plt.show()
+    if should_save_figure:
+        plt.savefig(file_name+ "-loss.png")
 
 
 def evaluate_model(trainedModel, testData, testLabels):
