@@ -10,7 +10,8 @@ from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
 from learningRateSchedules import *
 from models import projectionHead
-from models import resnet18, resnet50
+from models import resnet18
+from models.resnet50 import ResNet50
 
 # Allows to run on GPU if available
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -24,10 +25,15 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
         outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
         sim_clr = Model(inputs=inputs, outputs=outputs)
     elif encoder_network == "resnet-50":
-        inputs, base_model = resnet50.resnet50(input_shape=flagSettings.input_shape)
-        # outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
-        # sim_clr = Model(inputs=inputs, outputs=outputs)
-        raise NotImplemented("Not yet implemented")
+        base_model = ResNet50(input_shape=flagSettings.input_shape,
+                         include_top=False,
+                         weights=None,
+                         pooling='avg',
+                         cifar=True)
+        inputs = base_model.input
+
+        outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, resnet50=True)
+        sim_clr = Model(inputs=inputs, outputs=outputs)
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
 
