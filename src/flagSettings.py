@@ -11,9 +11,9 @@ input_shape = (32, 32, 3)
 # Training settings
 learning_rate = 0.5
 temperature = 0.1  # Temperature in the loss function
-batch_size = 128
+batch_size = 256
 weight_decay = 10e-6
-loss_function = lossFunctions.NT_Xent_loss
+loss_function = lossFunctions.triplet_hard_loss #lossFunctions.NT_Xent_loss #lossFunctions.NT_Logistic_Loss #lossFunctions.triplet_hard_loss
 nr_epochs = 100
 use_checkpointing = True
 nr_epochs_warmup = 10
@@ -30,7 +30,7 @@ rand_strength = 10
 
 # Fine-tune settings
 percentage_fine_tune_data = 0.01
-fine_tune_batch_size = 128
+fine_tune_batch_size = 256
 fine_tune_momentum = 0.9
 fine_tune_lr = 0.05  # Following this formula (0.05 * batch_size/ 256)
 fine_tune_nr_epochs = 60  # For 1% data => 60 epochs, 10% data => 30 epochs
