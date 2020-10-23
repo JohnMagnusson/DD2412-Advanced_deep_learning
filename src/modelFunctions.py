@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from keras_preprocessing.image import ImageDataGenerator
 from sklearn.manifold import TSNE
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
@@ -8,6 +9,7 @@ from tensorflow.keras.models import Model
 from LARS_optimizer import MomentumLARS
 from augmentationEngine import SimClrAugmentation
 from customTraining import TrainingEngine
+from dataAugmentations import fine_tune_augment
 from learningRateSchedules import *
 from models import projectionHead
 from models import resnet18
@@ -146,15 +148,23 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
     model = Model(inputs=base_model.input, outputs=outputs)
     model.compile(loss="sparse_categorical_crossentropy",
                   metrics=["accuracy"],
-                  optimizer=tf.keras.optimizers.SGD(learning_rate=flagSettings.learning_rate,
-                                                    momentum=flagSettings.fine_tune_momentum))
+                  optimizer=tf.keras.optimizers.SGD(learning_rate=flagSettings.fine_tune_lr,
+                                                    momentum=flagSettings.fine_tune_momentum,
+                                                    nesterov=True))
 
     # model.summary()
 
-    history_fine_tune = model.fit(x=train_dataset[0], y=train_dataset[1],
+    # Todo john is working here atm
+    # data_generator = ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_dataset[0],
+    #                                                                                    y=train_dataset[1],
+    #                                                                                    batch_size=flagSettings.fine_tune_batch_size,
+    #                                                                                    shuffle=False)
+
+    # history_fine_tune = model.fit(data_generator,
+    history_fine_tune = model.fit(x=train_dataset[0], y = train_dataset[1],
                                   epochs=flagSettings.fine_tune_nr_epochs,
                                   validation_data=validation_dataset,
-                                  shuffle=True)
+                                  shuffle=False, batch_size=flagSettings.fine_tune_batch_size)
 
     return model, history_fine_tune
 

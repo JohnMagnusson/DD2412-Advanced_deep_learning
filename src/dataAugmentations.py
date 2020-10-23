@@ -42,9 +42,11 @@ def cut_out(img):
     :return: Image with a cutout in it
     """
     lol = 3
-    return tfa.image.cutout_ops.random_cutout(images=img, mask_size=(15, 15), constant_values=0, seed=12,
+    visualizeTensorImage(img)
+    image =  tfa.image.cutout_ops.random_cutout(images=img, mask_size=(15, 15), constant_values=0, seed=12,
                                               data_format="channels_last")
-
+    visualizeTensorImage(image)
+    return image
 
 def gaussian_blur(image, std):
     """Applies gaussian blur with kernel size at 1/10th of the image size
@@ -127,16 +129,24 @@ def sobel(image):
     return image
 
 
-def visualizeTensorImage(image):
+def visualizeTensorImage(img):
     """Prints the image from a tensor form
     Args:
         image: a single image
     Returns:
         Shows image
     """
-    image = tf.Session().run(image)
-    image = np.squeeze(image)
-    plt.imshow(np.round(image, 0))
+    # image = tf.Session().run(image)   # old stuff, eeekk
+    # image = np.squeeze(image)
+    # plt.imshow(np.round(image, 0))
+    # print(img)
+    # # todo test tthe under
+    # img = tf.image.convert_image_dtype(img, tf.float32)
+    # # img = tf.image.resize(img, [500,500])
+    # plt.imshow(img.numpy())
+# for x,y in image: print(x,y)
+    return img
+        # plt.imshow(x.numpy()/255)
 
 
 def randomApply(image):
@@ -194,3 +204,14 @@ def augmentBatch(images, labels):
     #    augment2.append(randomApply(images))
 
     return images, randomApply(images), randomApply(images), labels
+
+
+def fine_tune_augment(image):
+    # apply flip
+    # rand = random.randrange(0, 100)
+    # if rand < 50:
+    #     image = flip(image)
+    #
+    # # apply crop
+    # image = crop_resize(image)
+    return image

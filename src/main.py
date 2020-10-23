@@ -3,8 +3,8 @@ from modelFunctions import *
 
 do_warmup_new_model = False
 do_train_new_model = False
-do_fine_tune_model = False
-do_evaluation_on_model = True
+do_fine_tune_model = True
+do_evaluation_on_model = False
 
 train_data, val_data, test_data = get_data_set(flagSettings.data_set)
 
