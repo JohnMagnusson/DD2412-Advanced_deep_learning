@@ -40,7 +40,6 @@ class AugmentationStudy(AugmentationEngine):
         self.augmentation1 = augmentation1
         self.augmentation2 = augmentation2
 
-    # @tf.function
     def augment(self, input_data, augmentation_type1, augmentation_type2):
         augmentations = [augmentation_type1, augmentation_type2]
         x = input_data
@@ -48,21 +47,13 @@ class AugmentationStudy(AugmentationEngine):
             if augmentation == "crop":
                 x = crop_resize(x)
             elif augmentation == "cutout":
-
-
-                print(input_data)
-                for x,y in input_data:
-                    plt.imshow(x.numpy())
-
-
-
                 x = cut_out(x)
             elif augmentation == "color":
                 x = color_jitter(x, s=1)
             elif augmentation == "sobel":
                 x = sobel(x)
             elif augmentation == "gaussian_noise":
-                raise NotImplemented("Gaussian noise not implemented")
+                x = gaussian_noise(x)
             elif augmentation == "gaussian_blur":
                 std = random.uniform(.1, 2)
                 x = gaussian_blur(x, std)

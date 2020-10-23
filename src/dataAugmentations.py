@@ -1,6 +1,5 @@
 import random
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -34,19 +33,40 @@ def crop_resize(image):
     return original_size
 
 
-def cut_out(img):
+def cut_out(image, pad_size= 8,replace=0):
     """
-    Source: https://arxiv.org/pdf/1708.04552.pdf (16 × 16 pixels cut out size on cifar-10)
     Apples random cutouts and replaces the whole with a constant value
     :param img:
     :return: Image with a cutout in it
     """
-    lol = 3
-    visualizeTensorImage(img)
-    image =  tfa.image.cutout_ops.random_cutout(images=img, mask_size=(15, 15), constant_values=0, seed=12,
-                                              data_format="channels_last")
-    visualizeTensorImage(image)
+    print("applying Cutout")
+    # set padsize to half of the width/height of cutout box
+    image_height = tf.shape(image)[0]
+    image_width = tf.shape(image)[1]
+
+    # Sample the center location in the image where the zero mask will be applied.
+    cutout_center_height = tf.random.uniform(shape=[], minval=0, maxval=image_width, dtype=tf.int32)
+    cutout_center_width = tf.random.uniform(shape=[], minval=0, maxval=image_width, dtype=tf.int32)
+
+    lower_pad = tf.maximum(0, cutout_center_height - pad_size)
+    upper_pad = tf.maximum(0, image_height - cutout_center_height - pad_size)
+    left_pad = tf.maximum(0, cutout_center_width - pad_size)
+    right_pad = tf.maximum(0, image_width - cutout_center_width - pad_size)
+
+    cutout_shape = [image_height - (lower_pad + upper_pad),
+                    image_width - (left_pad + right_pad)]
+    padding_dims = [[lower_pad, upper_pad], [left_pad, right_pad]]
+
+    mask = tf.pad(tf.zeros(cutout_shape, dtype=image.dtype), padding_dims, constant_values=1)
+    mask = tf.expand_dims(mask, -1)
+    mask = tf.tile(mask, [1, 1, 3])
+
+    image = tf.where(
+        tf.equal(mask, 0),
+        tf.ones_like(image, dtype=image.dtype) * replace, image)
+
     return image
+
 
 def gaussian_blur(image, std):
     """Applies gaussian blur with kernel size at 1/10th of the image size
@@ -129,6 +149,15 @@ def sobel(image):
     return image
 
 
+def gaussian_noise(image):
+    image = tf.clip_by_value(image / 255, 0, 1)
+    with tf.name_scope('Add_gaussian_noise'):
+        noise = tf.compat.v1.random.normal(shape=tf.shape(image), mean=0.0, stddev=(10) / (255), dtype=tf.float32)
+        noise_img = image + noise
+        noise_img = tf.clip_by_value(noise_img, 0.0, 1.0) * 255
+    return noise_img
+
+
 def visualizeTensorImage(img):
     """Prints the image from a tensor form
     Args:
@@ -144,9 +173,10 @@ def visualizeTensorImage(img):
     # img = tf.image.convert_image_dtype(img, tf.float32)
     # # img = tf.image.resize(img, [500,500])
     # plt.imshow(img.numpy())
-# for x,y in image: print(x,y)
-    return img
-        # plt.imshow(x.numpy()/255)
+    # for x,y in image: print(x,y)
+    # return img
+    # plt.imshow(x.numpy()/255)
+    raise Exception("Currently broken function")
 
 
 def randomApply(image):
