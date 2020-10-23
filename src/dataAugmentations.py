@@ -188,13 +188,13 @@ def randomApply(image):
     """
     # normal_image = image.copy()
 
+    # apply crop
+    image = crop_resize(image)
+
     # apply flip
     rand = random.randrange(0, 100)
     if rand < 50:
         image = flip(image)
-
-    # apply crop
-    image = crop_resize(image)
 
     # apply color jitter
     rand = random.randrange(0, 100)
@@ -226,22 +226,18 @@ def augmentBatch(images, labels):
     Returns:
         original images, augmented images, and associated labels in separate lists
     """
-    augment1 = []
-    augment2 = []
-
-    # for image in images:
-    #    augment1.append(randomApply(images))
-    #    augment2.append(randomApply(images))
 
     return images, randomApply(images), randomApply(images), labels
 
 
 def fine_tune_augment(image):
+    # apply crop
+    image = crop_resize(image)
+
     # apply flip
     rand = random.randrange(0, 100)
     if rand < 50:
         image = flip(image)
 
-    # apply crop
-    image = crop_resize(image)
+
     return image.numpy()

@@ -87,13 +87,11 @@ class TrainingEngine:
                                                               tf.keras.utils.to_categorical(validation_data[1],
                                                                                             flagSettings.num_classes)))
 
-
         training_loss = []
         validation_loss = []
-        iterationsPerEpoch = math.floor(len(list(train_data)) / flagSettings.batch_size)
+        iterations_per_epoch = math.floor(len(list(train_data)) / flagSettings.batch_size)
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
-
 
             if self.set_custom_lr:
                 self.optimizer.lr.assign(self.lr_scheduler.get_learning_rate(epoch))
@@ -109,7 +107,7 @@ class TrainingEngine:
                 self.__train_step(batch_x_1, batch_x_2)
                 if verbose:
                     template = 'Epoch {}/{}, Iteration {}/{}, Loss: {}, Previous epoch validation Loss: {} '
-                    print(template.format(epoch + 1, epochs, iteration, iterationsPerEpoch,
+                    print(template.format(epoch + 1, epochs, iteration, iterations_per_epoch,
                                           self.train_loss.result(),
                                           self.test_loss.result()))
 
