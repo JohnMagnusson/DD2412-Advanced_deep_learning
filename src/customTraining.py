@@ -86,9 +86,7 @@ class TrainingEngine:
         validation_data = tf.data.Dataset.from_tensor_slices((tf.cast(validation_data[0], dtype=tf.float32),
                                                               tf.keras.utils.to_categorical(validation_data[1],
                                                                                             flagSettings.num_classes)))
-        # We augment the data once so we test on the same during training. Maybe this should not be augmented?
-        augmented_val_data = self.data_augmentation_module.transform(validation_data)
-        batched_val_data = augmented_val_data.batch(batch_size)
+
 
         training_loss = []
         validation_loss = []
@@ -116,6 +114,8 @@ class TrainingEngine:
                                           self.test_loss.result()))
 
             self.test_loss.reset_states()
+            augmented_val_data = self.data_augmentation_module.transform(validation_data)
+            batched_val_data = augmented_val_data.batch(batch_size)
             for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
                 self.__test_step(batch_x1_val, batch_x2_val)
 

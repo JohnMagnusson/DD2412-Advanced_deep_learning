@@ -34,7 +34,7 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
         inputs = base_model.input
 
         outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, resnet50=True)
-        sim_clr = Model(inputs=inputs, outputs=outputs)
+        sim_clr = Model(inputs=inputs, outputs=outputs, name="SimCLR")
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
 
