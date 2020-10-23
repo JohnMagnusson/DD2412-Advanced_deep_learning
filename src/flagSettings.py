@@ -13,8 +13,8 @@ learning_rate = 0.5
 temperature = 0.1  # Temperature in the loss function
 batch_size = 256
 weight_decay = 10e-6
-loss_function = lossFunctions.NT_Xent_tf_test2
-nr_epochs = 1
+loss_function = lossFunctions.NT_Xent_loss
+nr_epochs = 100
 use_checkpointing = True
 nr_epochs_warmup = 10
 
