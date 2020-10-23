@@ -238,10 +238,10 @@ def augmentBatch(images, labels):
 
 def fine_tune_augment(image):
     # apply flip
-    # rand = random.randrange(0, 100)
-    # if rand < 50:
-    #     image = flip(image)
-    #
-    # # apply crop
-    # image = crop_resize(image)
-    return image
+    rand = random.randrange(0, 100)
+    if rand < 50:
+        image = flip(image)
+
+    # apply crop
+    image = crop_resize(image)
+    return image.numpy()

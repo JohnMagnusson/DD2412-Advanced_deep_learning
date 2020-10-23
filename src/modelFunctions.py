@@ -1,15 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from keras_preprocessing.image import ImageDataGenerator
 from sklearn.manifold import TSNE
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from LARS_optimizer import MomentumLARS
-from augmentationEngine import SimClrAugmentation
+from augmentationEngine import SimClrAugmentation, fine_tune_augment
 from customTraining import TrainingEngine
-from dataAugmentations import fine_tune_augment
 from learningRateSchedules import *
 from models import projectionHead
 from models import resnet18
@@ -153,20 +152,42 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
                                                     nesterov=True))
 
     # model.summary()
-
-    # Todo john is working here atm
     # data_generator = ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_dataset[0],
-    #                                                                                    y=train_dataset[1],
-    #                                                                                    batch_size=flagSettings.fine_tune_batch_size,
-    #                                                                                    shuffle=False)
+    data_generator = generator_wrapper(ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_dataset[0], y=train_dataset[1],
+                                                                 batch_size=flagSettings.fine_tune_batch_size,
+                                                                 shuffle=True))
 
-    # history_fine_tune = model.fit(data_generator,
-    history_fine_tune = model.fit(x=train_dataset[0], y = train_dataset[1],
+    steps = train_dataset[0].shape[0] / flagSettings.fine_tune_batch_size
+    history_fine_tune = model.fit(data_generator,
                                   epochs=flagSettings.fine_tune_nr_epochs,
-                                  validation_data=validation_dataset,
-                                  shuffle=False, batch_size=flagSettings.fine_tune_batch_size)
+                                  steps_per_epoch=steps,
+                                  validation_data=validation_dataset)
+
+    # history_fine_tune = model.fit(x=train_dataset[0], y=train_dataset[1],
+    #                               epochs=flagSettings.fine_tune_nr_epochs,
+    #                               validation_data=validation_dataset,
+    #                               shuffle=True, batch_size=flagSettings.fine_tune_batch_size)
+
 
     return model, history_fine_tune
+
+
+def generator_wrapper(generator):
+    """
+    Wrapper function is used so we can have a pre_process function that use multiple inputs compared to the
+    standard implementation from keras that only take the image batch as input.
+    :param generator: The generator that will be used to generate data
+    """
+
+    while True:
+        x = generator.next()
+
+        images = []
+        labels = []
+        for i in range(x[0].shape[0]):
+            images.append(fine_tune_augment(x[0][i]))
+            labels.append(x[1][i])
+        yield np.array(images), np.array(labels).flatten()
 
 
 def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, projection_head_mode="nonlinear"):
