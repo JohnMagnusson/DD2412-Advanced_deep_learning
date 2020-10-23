@@ -1,4 +1,3 @@
-import datetime
 import math
 
 import tensorflow as tf
@@ -30,12 +29,6 @@ class TrainingEngine:
         self.test_accuracy = tf.keras.metrics.CategoricalAccuracy(name='test_accuracy')
 
         self.data_augmentation_module = data_augmentation_module
-
-        self.checkpoint_name_prefix = self.__get_current_time()
-
-    def __get_current_time(self):
-        now = datetime.datetime.now()
-        return now.strftime("%Y-%m-%d_%H-%M-%S")
 
     @tf.function
     def __train_step(self, images_augm_1, images_augm_2):
@@ -102,12 +95,11 @@ class TrainingEngine:
         iterationsPerEpoch = math.floor(len(list(train_data)) / flagSettings.batch_size)
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
-            # self.train_accuracy.reset_states()
-            # self.test_accuracy.reset_states()
+
 
             if self.set_custom_lr:
                 self.optimizer.lr.assign(self.lr_scheduler.get_learning_rate(epoch))
-            print(self.optimizer.lr.numpy())
+            # print(self.optimizer.lr.numpy())
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:
@@ -132,9 +124,8 @@ class TrainingEngine:
                 print(template.format(epoch + 1, epochs, self.test_loss.result()))
 
             if epoch > 1 and self.test_loss.result() < min(validation_loss):
-                checkpoint_name = self.checkpoint_name_prefix + "_" + str(self.test_loss.result().numpy())
-                print("New lowest validation loss found. Saving weights as: " + checkpoint_name)
-                self.model.save_weights("checkpoint_models/" + checkpoint_name)
+                print("New lowest validation loss found. Saving weights for model as: " + self.model.name)
+                self.model.save_weights("checkpoint_models/" + self.model.name)
 
             # Save the last loss for the epoch and the validation loss for the epoch
             training_loss.append(self.train_loss.result().numpy())

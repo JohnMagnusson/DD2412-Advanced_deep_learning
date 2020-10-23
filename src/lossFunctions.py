@@ -41,6 +41,8 @@ def NT_Xent_tf_test2(zi, zj, tau=1):
     Returns:
         loss: The complete NT_Xent constrastive loss
     """
+
+    tau = flagSettings.temperature
     z = tf.cast(tf.concat((zi, zj), 0), dtype=tf.float32)
     loss = 0
     for k in range(zi.shape[0]):

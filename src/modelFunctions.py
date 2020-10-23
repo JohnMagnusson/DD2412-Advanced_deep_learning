@@ -26,10 +26,10 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
         sim_clr = Model(inputs=inputs, outputs=outputs)
     elif encoder_network == "resnet-50":
         base_model = ResNet50(input_shape=flagSettings.input_shape,
-                         include_top=False,
-                         weights=None,
-                         pooling='avg',
-                         cifar=True)
+                              include_top=False,
+                              weights=None,
+                              pooling='avg',
+                              cifar=True)
         inputs = base_model.input
 
         outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, resnet50=True)
@@ -56,7 +56,7 @@ def train_model_default(model, training_data, training_labels):
     return model, []
 
 
-def train_model(model, train_data, val_data):
+def train_model(model, train_data, val_data, augmentation_engine=SimClrAugmentation()):
     training_module = TrainingEngine(model, set_custom_lr=True)
 
     training_module.optimizer = MomentumLARS(weight_decay=flagSettings.weight_decay)
@@ -65,7 +65,7 @@ def train_model(model, train_data, val_data):
     training_module.lr_scheduler = Cosine_decay_lr_scheduler(decay_steps=flagSettings.nr_epochs,
                                                              initial_learning_rate=flagSettings.learning_rate)
     training_module.loss_object = flagSettings.loss_function
-    training_module.data_augmentation_module = SimClrAugmentation()
+    training_module.data_augmentation_module = augmentation_engine
     training_loss, validation_loss = training_module.fit(train_data,
                                                          val_data,
                                                          batch_size=flagSettings.batch_size,
@@ -74,13 +74,13 @@ def train_model(model, train_data, val_data):
     return model, training_loss, validation_loss
 
 
-def warmup_model(model, train_data, val_data):
+def warmup_model(model, train_data, val_data, augmentation_engine=SimClrAugmentation()):
     training_module = TrainingEngine(model, set_custom_lr=True)
 
     training_module.optimizer = MomentumLARS()
     training_module.lr_scheduler = Linear_decay_lr_scheduler()
     training_module.loss_object = flagSettings.loss_function
-    training_module.data_augmentation_module = SimClrAugmentation()
+    training_module.data_augmentation_module = augmentation_engine
     training_loss, validation_loss = training_module.fit(train_data,
                                                          val_data,
                                                          batch_size=flagSettings.batch_size,
@@ -89,7 +89,7 @@ def warmup_model(model, train_data, val_data):
     return model, training_loss, validation_loss
 
 
-def plot_loss(training_loss, validation_loss, should_save_figure=False, file_name = ""):
+def plot_loss(training_loss, validation_loss, should_save_figure=False, file_name=""):
     plt.plot(training_loss, label='Training loss')
     plt.plot(validation_loss, label='Validation loss')
     plt.xlabel('Epochs')
@@ -98,10 +98,10 @@ def plot_loss(training_loss, validation_loss, should_save_figure=False, file_nam
     plt.grid(True)
     plt.show()
     if should_save_figure:
-        plt.savefig(file_name+".png")
+        plt.savefig(file_name + ".png")
 
 
-def plot_fine_tuning(history, should_save_figure=False, file_name = ""):
+def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
     plt.title('model accuracy')
@@ -110,7 +110,7 @@ def plot_fine_tuning(history, should_save_figure=False, file_name = ""):
     plt.legend(['train', 'test'], loc='upper right')
     plt.show()
     if should_save_figure:
-        plt.savefig(file_name+ "-accuracy.png")
+        plt.savefig(file_name + "-accuracy.png")
 
     # summarize history for loss
     plt.plot(history.history['loss'])
@@ -121,7 +121,7 @@ def plot_fine_tuning(history, should_save_figure=False, file_name = ""):
     plt.legend(['train', 'test'], loc='upper right')
     plt.show()
     if should_save_figure:
-        plt.savefig(file_name+ "-loss.png")
+        plt.savefig(file_name + "-loss.png")
 
 
 def evaluate_model(trainedModel, testData, testLabels):
@@ -140,8 +140,6 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
     else:
         raise Exception("This type of head is not supported: " + str(type_of_head))
 
-    # inputs = Input(shape=flagSettings.input_shape)
-    # output_model = base_model(inputs)
     x = base_model.layers[fine_tune_at].output
     base_model.trainable = False
     outputs = Dense(flagSettings.num_classes, activation='softmax')(x)

@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 import flagSettings
 
 
-def get_data_set(validation_ratio=0.2):
-    if flagSettings.data_set == "cifar-10":
+def get_data_set(data_set="cifar-10", validation_ratio=0.2):
+    if data_set == "cifar-10":
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=validation_ratio, random_state=1,
                                                           shuffle=False)
