@@ -34,6 +34,9 @@ class TestAugmentation(AugmentationEngine):
         print('using test augmentations')
         return data
 
+@tf.function
+def show(x):
+    for i,j in x: tf.print(i,j)
 
 class AugmentationStudy(AugmentationEngine):
     def __init__(self, augmentation1, augmentation2):
@@ -65,12 +68,36 @@ class AugmentationStudy(AugmentationEngine):
                 raise Exception("Invalid argument for augment test")
         return x
 
-    def transform(self, data):
+    def transform(self, data, show_image_before=True, show_image_after=True):
         """
         We augment 1 image and keep the second one the same
         :param data:
         :return: (image, augmented image, image, labels)
+        
         """
+        image = 0
+        if show_image_before:
+            for i,j in data:
+                if image == 0:
+                    plt.imshow(i.numpy()/255)
+                    plt.show()
+                else:
+                    pass
+                image +=1
+                
         data = data.map(lambda x, y: (x, self.augment(x, self.augmentation1, self.augmentation2), x, y),
                         num_parallel_calls=AUTOTUNE)
+        
+        image = 0
+        if show_image_after:
+            for i,j,k,l in data:
+                if image == 0:
+                    plt.imshow(j.numpy()/255)
+                    plt.show()
+                    plt.imshow(j.numpy()/255)
+                    plt.show()
+                else:
+                    pass
+                image +=1
+        
         return data
