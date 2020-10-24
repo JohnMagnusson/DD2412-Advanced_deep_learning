@@ -1,10 +1,13 @@
 # This is a study in how augmentation affects the accuracy and how important they are.
 import os
+import pickle
 
 import flagSettings
 from augmentationEngine import AugmentationStudy
 from dataManagement import balanced_subsample, get_data_set
-from modelFunctions import build_simCLR_model, warmup_model, train_model, fine_tune_model, evaluate_model, plot_loss
+from linearEvaluation import linear_evaluation_model
+from modelFunctions import build_simCLR_model, warmup_model, train_model, fine_tune_model, evaluate_model, plot_loss, \
+    plot_linear_evaluation_accuracy
 
 # The folder name where all the tests will be saved
 folder_prefix = "augmentation_test/"
@@ -19,9 +22,7 @@ def run_image_augmentation_study():
 
     test_accuracy_per_augment = []
 
-    # augmentations = ["cutout", "color", "sobel", "gaussian_noise", "gaussian_blur", "rotate", "crop"]
-    augmentations = ["sobel", "color", "gaussian_noise", "gaussian_blur", "crop", "rotate", "cutout"]
-    # augmentations = ["gaussian_noise", "gaussian_blur"]
+    augmentations = ["cutout", "color", "sobel", "gaussian_noise", "gaussian_blur", "rotate", "crop"]
     train_data, val_data, test_data = prepare_pipeline(dataset=data_set, test_name=test_name)
 
     for i in range(len(augmentations)):
@@ -58,38 +59,33 @@ def run_training_pipeline(model, train_data, val_data, test_data, augmentation_e
     print("Done with pretraining")
 
     print("Starting with linear evaluation: " + model_name)
-    # Todo replace with linear evaluation
-    train_data_sub = balanced_subsample(train_data, flagSettings.percentage_fine_tune_data)
-    validation_data_sub = balanced_subsample(val_data, flagSettings.percentage_fine_tune_data)
-    fine_tuned_model, history_fine_tune = fine_tune_model(model, projection_head, train_data_sub, validation_data_sub)
-    # fine_tuned_model, history_fine_tune = fine_tune_model(model, projection_head, train_data, val_data)
-    fine_tuned_model.save_weights(weights_save_path + "/finetuned_models/" + model_name)
-
-    test_accuracy = evaluate_model(fine_tuned_model, test_data)
+    sk_learn_model, val_accuracy, test_acc = linear_evaluation_model(trained_model, train_data, val_data, test_data, "nonlinear")
+    plot_linear_evaluation_accuracy(val_accuracy, should_save_figure=True, file_name=(plot_save_path + "linear/" + model_name))
+    pickle.dump(sk_learn_model, open(weights_save_path + "/linear_models/" + model_name, 'wb'))
     print("Done with linear evaluation")
-    return test_accuracy
+    return test_acc
 
 
 def prepare_pipeline(dataset="cifar-10", test_name="test"):
-    # if os.path.exists(folder_prefix + test_name):
-    #     raise FileExistsError("There exits already a test with this name, delete or choose another name.")
-    # os.makedirs(folder_prefix + test_name)
-    #
-    # # # Creates a folder for the checkpoint models
-    # if os.path.exists("../checkpoint_models/" + test_name):
-    #     raise FileExistsError("There exits already a test with this name (in the checkpoint folder),"
-    #                           " delete or choose another name.")
-    # os.makedirs("../checkpoint_models/" + test_name)
-    #
-    # # Create folders for the models weights
-    # os.makedirs(folder_prefix + test_name + "/warmup_models")
-    # os.makedirs(folder_prefix + test_name + "/trained_models")
-    # os.makedirs(folder_prefix + test_name + "/finetuned_models")
-    #
-    # # Plots folders
-    # os.makedirs(folder_prefix + test_name + plot_prefix + "warmup")
-    # os.makedirs(folder_prefix + test_name + plot_prefix + "trained")
-    # os.makedirs(folder_prefix + test_name + plot_prefix + "finetuned")
+    if os.path.exists(folder_prefix + test_name):
+        raise FileExistsError("There exits already a test with this name, delete or choose another name.")
+    os.makedirs(folder_prefix + test_name)
+
+    # # Creates a folder for the checkpoint models
+    if os.path.exists("../checkpoint_models/" + test_name):
+        raise FileExistsError("There exits already a test with this name (in the checkpoint folder),"
+                              " delete or choose another name.")
+    os.makedirs("../checkpoint_models/" + test_name)
+
+    # Create folders for the models weights
+    os.makedirs(folder_prefix + test_name + "/warmup_models")
+    os.makedirs(folder_prefix + test_name + "/trained_models")
+    os.makedirs(folder_prefix + test_name + "/linear_models")
+
+    # Plots folders
+    os.makedirs(folder_prefix + test_name + plot_prefix + "warmup")
+    os.makedirs(folder_prefix + test_name + plot_prefix + "trained")
+    os.makedirs(folder_prefix + test_name + plot_prefix + "linear")
 
     train_data, val_data, test_data = get_data_set(dataset)
 

@@ -155,6 +155,18 @@ def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name
     plt.clf()
 
 
+def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True, file_name=""):
+    plt.plot(validation_accuracy, label='Validation accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    if should_save_figure:
+        plt.savefig(file_name + ".png")
+    plt.clf()
+
+
 def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])

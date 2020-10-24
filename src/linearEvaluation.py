@@ -23,7 +23,7 @@ biases  = tf.Variable(tf.random.normal(shape=(10,), dtype=tf.float64))
 def logistic_regression(x):
     lr = tf.add(tf.matmul(x, weights), biases)
     return tf.nn.sigmoid(lr)
-    return lr
+    # return lr
 
 
 def cross_entropy(y_true, y_pred):
