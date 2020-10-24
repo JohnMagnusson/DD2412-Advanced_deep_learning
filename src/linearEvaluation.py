@@ -98,8 +98,8 @@ def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head
     val_accuracy = []
     augmEngine = LinearEvalAugmentation()
     for epoch in tqdm(range(flagSettings.linear_evaluation_nr_epochs)):
-
-        train_data_augmented = augmEngine.transform(train_data)
+        shuffled_training_data = train_data.shuffle(len(list(train_data)))
+        train_data_augmented = augmEngine.transform(shuffled_training_data)
         for batch_numb, (batch_xs, batch_ys) in enumerate(train_data_augmented.batch(flagSettings.linear_evaluation_batch_size), 1):
 
             batch_x = model.predict(batch_xs)
@@ -107,7 +107,7 @@ def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head
         y_val_pred = scikit_model.predict(tf.reshape(X_val, (-1, 512)))
         val_acc = accuracy_score(val_data[1], y_val_pred)
         val_accuracy.append(val_acc)
-        print("Epoch: " + str(epoch) + ", Validation accuracy: " + str(val_accuracy))
+        print("Epoch: " + str(epoch) + ", Validation accuracy: " + str(val_acc))
 
     y_test_pred = scikit_model.predict(tf.reshape(X_test, (-1, 512)))
     test_acc = accuracy_score(test_data[1], y_test_pred)
