@@ -102,3 +102,10 @@ class AugmentationStudy(AugmentationEngine):
                 break
 
         return data
+
+
+class LinearEvalAugmentation(AugmentationEngine):
+    def transform(self, data):
+        data = data.map(lambda x, y: (linear_evaluation_augment(x), y),
+                        num_parallel_calls=AUTOTUNE)
+        return data

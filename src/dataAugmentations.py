@@ -213,3 +213,13 @@ def fine_tune_augment(image):
         image = flip(image)
 
     return image.numpy()
+
+def linear_evaluation_augment(image):
+    # apply flip
+    rand = random.randrange(0, 100)
+    if rand < 50:
+        image = flip(image)
+
+    # apply crop
+    image = crop_resize(image)
+    return image
