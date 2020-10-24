@@ -102,7 +102,7 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
         raise Exception("This type of head is not supported: " + str(type_of_head))
 
     x = base_model.layers[fine_tune_at].output
-    # base_model.trainable = False
+    base_model.trainable = False
     outputs = Dense(flagSettings.num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=outputs)
     model.compile(loss="sparse_categorical_crossentropy",
@@ -111,8 +111,6 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
                                                     momentum=flagSettings.fine_tune_momentum,
                                                     nesterov=True))
 
-    # model.summary()
-    # data_generator = ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_dataset[0],
     data_generator = generator_wrapper(
         ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_dataset[0], y=train_dataset[1],
                                                                           batch_size=flagSettings.fine_tune_batch_size,
@@ -123,12 +121,6 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
                                   epochs=flagSettings.fine_tune_nr_epochs,
                                   steps_per_epoch=steps,
                                   validation_data=validation_dataset)
-
-    # history_fine_tune = model.fit(x=train_dataset[0], y=train_dataset[1],
-    #                               epochs=flagSettings.fine_tune_nr_epochs,
-    #                               validation_data=validation_dataset,
-    #                               shuffle=True, batch_size=flagSettings.fine_tune_batch_size)
-
     return model, history_fine_tune
 
 
@@ -150,7 +142,7 @@ def generator_wrapper(generator):
         yield np.array(images), np.array(labels).flatten()
 
 
-def plot_loss(training_loss, validation_loss, should_save_figure=False, file_name=""):
+def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name=""):
     plt.plot(training_loss, label='Training loss')
     plt.plot(validation_loss, label='Validation loss')
     plt.xlabel('Epochs')
@@ -188,9 +180,11 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.clf()
 
 
-def evaluate_model(trainedModel, testData, testLabels):
-    scores = trainedModel.evaluate(x=testData, y=testLabels, verbose=1)
-    print("%s: %.2f%% on the test set" % (trainedModel.metrics_names[1], scores[1] * 100))
+def evaluate_model(trained_model, test_data):
+    testData, testLabels = test_data[0], test_data[1]
+    scores = trained_model.evaluate(x=testData, y=testLabels, verbose=1)
+    print("%s: %.2f%% on the test set" % (trained_model.metrics_names[1], scores[1] * 100))
+    return scores
 
 
 def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, projection_head_mode="nonlinear"):

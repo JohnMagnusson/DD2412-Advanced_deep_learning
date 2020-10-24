@@ -17,7 +17,7 @@ class SimClrAugmentation(AugmentationEngine):
     def transform(self, data, augment=augmentation_type):
         if augment == 'simclr':
             print('using simclr augmentations')
-            data = data.map(lambda x, y: (augmentBatch(x, y)),
+            data = data.map(lambda x, y: (augment_batch(x, y)),
                             num_parallel_calls=AUTOTUNE)
         if augment == 'rand':
             print('using randaug augmentations')
@@ -34,9 +34,11 @@ class TestAugmentation(AugmentationEngine):
         print('using test augmentations')
         return data
 
+
 @tf.function
 def show(x):
-    for i,j in x: tf.print(i,j)
+    for i, j in x: tf.print(i, j)
+
 
 class AugmentationStudy(AugmentationEngine):
     def __init__(self, augmentation1, augmentation2):
@@ -68,36 +70,35 @@ class AugmentationStudy(AugmentationEngine):
                 raise Exception("Invalid argument for augment test")
         return x
 
-    def transform(self, data, show_image_before=True, show_image_after=True):
+    def transform(self, data, show_image_before=False, show_image_after=False):
         """
         We augment 1 image and keep the second one the same
         :param data:
         :return: (image, augmented image, image, labels)
         
         """
-        image = 0
+
         if show_image_before:
-            for i,j in data:
-                if image == 0:
-                    plt.imshow(i.numpy()/255)
-                    plt.show()
-                else:
-                    pass
-                image +=1
-                
-        data = data.map(lambda x, y: (x, self.augment(x, self.augmentation1, self.augmentation2), x, y),
+            for i, j in data:
+                plt.imshow(i.numpy() / 255)
+                plt.show()
+
+                img = sobel(i)
+                # plt.imshow(img.numpy()/255)
+                plt.imshow(img.numpy() / 255)
+                plt.show()
+                break
+
+        data = data.map(lambda x, y: (
+        x, tf.py_function(func=self.augment, inp=[x, self.augmentation1, self.augmentation2], Tout=tf.float32), x, y),
                         num_parallel_calls=AUTOTUNE)
-        
-        image = 0
+
         if show_image_after:
-            for i,j,k,l in data:
-                if image == 0:
-                    plt.imshow(j.numpy()/255)
-                    plt.show()
-                    plt.imshow(j.numpy()/255)
-                    plt.show()
-                else:
-                    pass
-                image +=1
-        
+            for i, j, k, l in data:
+                plt.imshow(j.numpy() / 255)
+                plt.show()
+                plt.imshow(k.numpy() / 255)
+                plt.show()
+                break
+
         return data

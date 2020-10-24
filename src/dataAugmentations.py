@@ -3,7 +3,6 @@ import random
 import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
-from scipy import ndimage
 
 import flagSettings
 
@@ -33,13 +32,12 @@ def crop_resize(image):
     return original_size
 
 
-def cut_out(image, pad_size= 8,replace=0):
+def cut_out(image, pad_size=8, replace=0):
     """
     Apples random cutouts and replaces the whole with a constant value
     :param img:
     :return: Image with a cutout in it
     """
-    print("applying Cutout")
     # set padsize to half of the width/height of cutout box
     image_height = tf.shape(image)[0]
     image_width = tf.shape(image)[1]
@@ -80,7 +78,6 @@ def gaussian_blur(image, std):
     blured_image = tfa.image.gaussian_filter2d(image,
                                                (int(np.round(int(width) * .1, 0)), int(np.round(int(height) * .1, 0))),
                                                std)
-    # blured_image = cv2.GaussianBlur(image,(int(np.round(int(width)*.1,0)),int(np.round(int(height)*.1,0))),std)
     return blured_image
 
 
@@ -91,19 +88,17 @@ def flip(image):
     Returns:
         Flipped image
     """
-    # flipped = cv2.flip(image,1)
     flipped = tf.image.flip_left_right(image)
     return flipped
 
 
 def rotate_randomly(image):
     """
-    Flips and image randomly in 360 degrees
+    Flips and image randomly in 360 degrees (in the paper they have constant, 90, 180, 270. Here we can do 56 degrees.
     :param image:
     :return:
     """
-
-    return tf.keras.preprocessing.image.random_rotation(x=image, rg=360)
+    return tf.keras.preprocessing.image.random_rotation(x=image.numpy(), row_axis=1, col_axis=0, channel_axis=2, rg=360)
 
 
 def color_jitter(image, s):
@@ -134,19 +129,18 @@ def colorDrop(image):
     return image
 
 
-# Todo verify that this works correctly, source: https://stackoverflow.com/questions/7185655/applying-the-sobel-filter-using-scipy
 def sobel(image):
     """
     Applies sobel filter to image
     :param image: Input image
     :return: Image with applied Sobel filter
     """
-    image = image.astype('int32')
-    dx = ndimage.sobel(image, 1)  # horizontal derivative
-    dy = ndimage.sobel(image, 0)  # vertical derivative
-    mag = np.hypot(dx, dy)  # magnitude
-    mag *= 255.0 / np.max(mag)  # normalize (Q&D)
-    return image
+
+    sobel_x = tf.constant([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], tf.float32)
+    kernel = tf.tile(sobel_x[..., None], [1, 1, 3])[..., None]
+    conv = tf.nn.depthwise_conv2d(image[None, ...], kernel, strides=[1, 1, 1, 1], padding='SAME')
+
+    return tf.reshape(conv, [32, 32, 3])
 
 
 def gaussian_noise(image):
@@ -158,28 +152,7 @@ def gaussian_noise(image):
     return noise_img
 
 
-def visualizeTensorImage(img):
-    """Prints the image from a tensor form
-    Args:
-        image: a single image
-    Returns:
-        Shows image
-    """
-    # image = tf.Session().run(image)   # old stuff, eeekk
-    # image = np.squeeze(image)
-    # plt.imshow(np.round(image, 0))
-    # print(img)
-    # # todo test tthe under
-    # img = tf.image.convert_image_dtype(img, tf.float32)
-    # # img = tf.image.resize(img, [500,500])
-    # plt.imshow(img.numpy())
-    # for x,y in image: print(x,y)
-    # return img
-    # plt.imshow(x.numpy()/255)
-    raise Exception("Currently broken function")
-
-
-def randomApply(image):
+def random_apply(image):
     """Randomly applies each augmentation according to the probabilities stated in SimCLR
     Args:
         image: a single image or batch of images
@@ -218,7 +191,7 @@ def randomApply(image):
     return image
 
 
-def augmentBatch(images, labels):
+def augment_batch(images, labels):
     """Applies all augmentations to batch according to SimCLR
     Args:
         images: a batch of images
@@ -227,7 +200,7 @@ def augmentBatch(images, labels):
         original images, augmented images, and associated labels in separate lists
     """
 
-    return images, randomApply(images), randomApply(images), labels
+    return images, random_apply(images), random_apply(images), labels
 
 
 def fine_tune_augment(image):
@@ -238,6 +211,5 @@ def fine_tune_augment(image):
     rand = random.randrange(0, 100)
     if rand < 50:
         image = flip(image)
-
 
     return image.numpy()

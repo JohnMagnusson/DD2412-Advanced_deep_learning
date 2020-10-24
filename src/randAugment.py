@@ -280,7 +280,6 @@ def Sharpness(img, v):  # [0.1,1.9]
 
 
 def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
-    print("applying Cutout")
     pad_size = v
     image_height = tf.shape(image)[0]
     image_width = tf.shape(image)[1]
