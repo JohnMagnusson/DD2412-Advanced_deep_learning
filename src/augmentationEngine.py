@@ -84,10 +84,10 @@ class AugmentationStudy(AugmentationEngine):
                 else:
                     pass
                 image +=1
-                
+
         data = data.map(lambda x, y: (x, self.augment(x, self.augmentation1, self.augmentation2), x, y),
                         num_parallel_calls=AUTOTUNE)
-        
+
         image = 0
         if show_image_after:
             for i,j,k,l in data:
@@ -99,5 +99,12 @@ class AugmentationStudy(AugmentationEngine):
                 else:
                     pass
                 image +=1
-        
+
+        return data
+
+
+class LinearEvalAugmentation(AugmentationEngine):
+    def transform(self, data):
+        data = data.map(lambda x, y: (linear_evaluation_augment(x), y),
+                        num_parallel_calls=AUTOTUNE)
         return data
