@@ -160,6 +160,7 @@ def plot_loss(training_loss, validation_loss, should_save_figure=False, file_nam
     plt.show()
     if should_save_figure:
         plt.savefig(file_name + ".png")
+    plt.clf()
 
 
 def plot_fine_tuning(history, should_save_figure=False, file_name=""):
@@ -172,6 +173,7 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.show()
     if should_save_figure:
         plt.savefig(file_name + "-accuracy.png")
+    plt.clf()
 
     # summarize history for loss
     plt.plot(history.history['loss'])
@@ -183,6 +185,7 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.show()
     if should_save_figure:
         plt.savefig(file_name + "-loss.png")
+    plt.clf()
 
 
 def evaluate_model(trainedModel, testData, testLabels):
