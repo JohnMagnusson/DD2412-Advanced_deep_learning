@@ -45,30 +45,8 @@ class AugmentationStudy(AugmentationEngine):
         self.augmentation1 = augmentation1
         self.augmentation2 = augmentation2
 
-    def augment(self, input_data, augmentation_type1, augmentation_type2):
-        augmentations = [augmentation_type1, augmentation_type2]
-        x = input_data
-        for augmentation in augmentations:
-            if augmentation == "crop":
-                x = crop_resize(x)
-            elif augmentation == "cutout":
-                x = cut_out(x)
-            elif augmentation == "color":
-                x = color_jitter(x, s=1)
-            elif augmentation == "sobel":
-                x = sobel(x)
-            elif augmentation == "gaussian_noise":
-                x = gaussian_noise(x)
-            elif augmentation == "gaussian_blur":
-                std = random.uniform(.1, 2)
-                x = gaussian_blur(x, std)
-            elif augmentation == "rotate":
-                x = rotate_randomly(x)
-            elif augmentation == "nothing":
-                pass
-            else:
-                raise Exception("Invalid argument for augment test")
-        return x
+    def augment(self, image):
+        return self.augmentation2(self.augmentation1(image))
 
     def transform(self, data, show_image_before=False, show_image_after=False):
         """
@@ -78,28 +56,31 @@ class AugmentationStudy(AugmentationEngine):
         
         """
 
-        if show_image_before:
-            for i, j in data:
-                plt.imshow(i.numpy() / 255)
-                plt.show()
+        # if show_image_before:
+        #     for i, j in data:
+        #         plt.imshow(i.numpy() / 255)
+        #         plt.show()
+        #
+        #         img = sobel(i)
+        #         # plt.imshow(img.numpy()/255)
+        #         plt.imshow(img.numpy() / 255)
+        #         plt.show()
+        #         break
 
-                img = sobel(i)
-                # plt.imshow(img.numpy()/255)
-                plt.imshow(img.numpy() / 255)
-                plt.show()
-                break
+        # Use the data.map when running test on random_rotate
+        # data = data.map(lambda x, y: (x, tf.py_function(func=self.augment, inp=[x], Tout=tf.float32), x, y),
+        #                 num_parallel_calls=AUTOTUNE)
 
-        data = data.map(lambda x, y: (
-        x, tf.py_function(func=self.augment, inp=[x, self.augmentation1, self.augmentation2], Tout=tf.float32), x, y),
-                        num_parallel_calls=AUTOTUNE)
+        data = data.map(lambda x, y: (x, self.augmentation2(self.augmentation1(x)), x, y), num_parallel_calls=AUTOTUNE)
 
-        if show_image_after:
-            for i, j, k, l in data:
-                plt.imshow(j.numpy() / 255)
-                plt.show()
-                plt.imshow(k.numpy() / 255)
-                plt.show()
-                break
+
+        # if show_image_after:
+        #     for i, j, k, l in data:
+        #         plt.imshow(j.numpy() / 255)
+        #         plt.show()
+        #         plt.imshow(k.numpy() / 255)
+        #         plt.show()
+        #         break
 
         return data
 

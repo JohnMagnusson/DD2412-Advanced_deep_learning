@@ -66,14 +66,14 @@ def cut_out(image, pad_size=8, replace=0):
     return image
 
 
-def gaussian_blur(image, std):
+def gaussian_blur(image):
     """Applies gaussian blur with kernel size at 1/10th of the image size
     Args:
         image: a single image or batch of images (if can get to work with tensorflow-addons)
-        std: a random value between 0.1 and 2
     Returns:
         Image(s) with a gaussian blur applied
     """
+    std = random.uniform(.1, 2)        # std: a random value between 0.1 and 2
     width, height, color_channels = image.shape
     blured_image = tfa.image.gaussian_filter2d(image,
                                                (int(np.round(int(width) * .1, 0)), int(np.round(int(height) * .1, 0))),
@@ -100,8 +100,15 @@ def rotate_randomly(image):
     """
     return tf.keras.preprocessing.image.random_rotation(x=image.numpy(), row_axis=1, col_axis=0, channel_axis=2, rg=360)
 
+def nothing(image):
+    """
+    Do no augmentation on the image
+    :param image:
+    :return:
+    """
+    return image
 
-def color_jitter(image, s):
+def color_jitter(image, s=1):
     """Applies a color jitter with random brightness, contrast, saturation, and hue
     Args:
         image: a single image or batch of images
@@ -183,8 +190,7 @@ def random_apply(image):
         # apply gaussian blur
         rand = random.randrange(0, 100)
         if rand < 50:
-            std = random.uniform(.1, 2)
-            image = gaussian_blur(image, std)
+            image = gaussian_blur(image)
         else:
             pass
 

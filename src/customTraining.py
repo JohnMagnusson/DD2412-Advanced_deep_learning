@@ -52,7 +52,7 @@ class TrainingEngine:
         self.test_loss(t_loss)
 
     def fit(self, train_data, validation_data, batch_size=100, epochs=20, shuffle=True, data_augmentation=False,
-            verbose=True):
+            verbose_training=True, verbose_validation=True):
         """
 
 
@@ -76,6 +76,9 @@ class TrainingEngine:
         Returns
         -------
         List of the loss over each epoch
+        :param validation_data:
+        :param verbose_training:
+        :param verbose_validation:
 
         """
 
@@ -105,7 +108,7 @@ class TrainingEngine:
             batched_train_data = augmented_train_data.batch(batch_size)
             for iteration, (_, batch_x_1, batch_x_2, batch_y) in enumerate(batched_train_data):
                 self.__train_step(batch_x_1, batch_x_2)
-                if verbose:
+                if verbose_training:
                     template = 'Epoch {}/{}, Iteration {}/{}, Loss: {}, Previous epoch validation Loss: {} '
                     print(template.format(epoch + 1, epochs, iteration, iterations_per_epoch,
                                           self.train_loss.result(),
@@ -117,13 +120,13 @@ class TrainingEngine:
             for _, batch_x1_val, batch_x2_val, _ in batched_val_data:
                 self.__test_step(batch_x1_val, batch_x2_val)
 
-            if verbose:
+            if verbose_validation:
                 template = 'Epoch {}/{}, Validation Loss: {} '
                 print(template.format(epoch + 1, epochs, self.test_loss.result()))
 
-            if epoch > 1 and self.test_loss.result() < min(validation_loss):
-                print("New lowest validation loss found. Saving weights for model as: " + self.model.name)
-                self.model.save_weights("checkpoint_models/" + self.model.name)
+            # if epoch > 1 and self.test_loss.result() < min(validation_loss):
+            print("New lowest validation loss found. Saving checkpoint weights for model as: " + self.model.name)
+            self.model.save_weights("checkpoint_models/" + self.model.name)
 
             # Save the last loss for the epoch and the validation loss for the epoch
             training_loss.append(self.train_loss.result().numpy())

@@ -149,10 +149,11 @@ def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name
     plt.ylabel('Error [NTXent Loss]')
     plt.legend()
     plt.grid(True)
-    plt.show()
     if should_save_figure:
         plt.savefig(file_name + ".png")
-    plt.clf()
+    plt.show()
+
+    # plt.clf()
 
 
 def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True, file_name=""):
@@ -161,10 +162,9 @@ def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True
     plt.ylabel('Accuracy')
     plt.legend()
     plt.grid(True)
-    plt.show()
     if should_save_figure:
         plt.savefig(file_name + ".png")
-    plt.clf()
+    plt.show()
 
 
 def plot_fine_tuning(history, should_save_figure=False, file_name=""):
@@ -174,9 +174,9 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper right')
-    plt.show()
     if should_save_figure:
         plt.savefig(file_name + "-accuracy.png")
+    plt.show()
     plt.clf()
 
     # summarize history for loss
@@ -186,9 +186,9 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper right')
-    plt.show()
     if should_save_figure:
         plt.savefig(file_name + "-loss.png")
+    plt.show()
     plt.clf()
 
 
