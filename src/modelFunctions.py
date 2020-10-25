@@ -153,8 +153,6 @@ def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name
         plt.savefig(file_name + ".png")
     plt.show()
 
-    # plt.clf()
-
 
 def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True, file_name=""):
     plt.plot(validation_accuracy, label='Validation accuracy')
