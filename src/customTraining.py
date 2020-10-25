@@ -124,9 +124,9 @@ class TrainingEngine:
                 template = 'Epoch {}/{}, Validation Loss: {} '
                 print(template.format(epoch + 1, epochs, self.test_loss.result()))
 
-            # if epoch > 1 and self.test_loss.result() < min(validation_loss):
-            print("New lowest validation loss found. Saving checkpoint weights for model as: " + self.model.name)
-            self.model.save_weights("checkpoint_models/" + self.model.name)
+            if epoch > 1 and self.test_loss.result() < min(validation_loss):
+                print("New lowest validation loss found. Saving checkpoint weights for model as: " + self.model.name)
+                self.model.save_weights("checkpoint_models/" + self.model.name)
 
             # Save the last loss for the epoch and the validation loss for the epoch
             training_loss.append(self.train_loss.result().numpy())
