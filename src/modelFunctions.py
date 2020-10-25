@@ -33,7 +33,7 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
                               cifar=True)
         inputs = base_model.input
 
-        outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, resnet50=True)
+        outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, is_resnet50=True)
         sim_clr = Model(inputs=inputs, outputs=outputs, name="SimCLR")
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
@@ -229,7 +229,7 @@ def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, 
         raise Exception("This mode for the projection head is not supported: " + str(projection_head_mode))
 
     tsne = TSNE()
-    projection.summary()
+    # projection.summary()
 
     x, y = (dataset[0][:nr_sample_to_visualize], dataset[1][:nr_sample_to_visualize])
     x_features = projection.predict(x)
