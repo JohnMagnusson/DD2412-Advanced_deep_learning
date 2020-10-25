@@ -8,6 +8,8 @@ from dataAugmentations import *
 from dataManagement import get_data_set
 from linearEvaluation import linear_evaluation_model
 
+
+
 # The folder name where all the tests will be saved
 folder_prefix = "augmentation_test/"
 plot_prefix = "/plots/"
