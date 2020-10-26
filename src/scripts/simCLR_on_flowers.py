@@ -3,8 +3,8 @@ from modelFunctions import *
 from linearEvaluation import linear_evaluation_model
 import pickle
 
-do_warmup_new_model = True
-do_train_new_model = True
+do_warmup_new_model = False
+do_train_new_model = False
 do_fine_tune_model = True
 do_linear_evaluation = True
 do_evaluation_on_model = False
