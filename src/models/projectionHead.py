@@ -21,7 +21,7 @@ def get_linear_head(base_model, is_resnet50=False):
     if is_resnet50:
         return Dense(2048, name="projection_head_linear")(base_model)
     else:
-        return Dense(512, name="projection_head_linear")(base_model)
+        return Dense(32, name="projection_head_linear")(base_model)
 
 
 def get_non_linear_head(base_model, is_resnet50=False):

@@ -66,12 +66,14 @@ for batch_numb, (batch_xs, batch_ys) in enumerate(dataset.take(n_batches), 1):
 def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head):
     #x_train = tf.reshape(train_data[0], shape=(-1, 128))
     #x_val = tf.reshape(val_data[0], shape=(-1, 128))
-    if type_of_head == "nonlinear":
+    if type_of_head == "nonlinear" or type_of_head == "nonlinear_swish":
         fine_tune_at = -4
     elif type_of_head == "linear":
         fine_tune_at = -2
     elif type_of_head == "none":
         fine_tune_at = -1
+    elif type_of_head == "nonlinear_extended":
+        fine_tune_at = -6
     else:
         raise Exception("This type of head is not supported: " + str(type_of_head))
 
@@ -81,7 +83,6 @@ def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head
     x = model.layers[fine_tune_at].output
     model.trainable = False
     model = Model(inputs=model.input, outputs=x)
-
     train_data = tf.data.Dataset.from_tensor_slices((tf.cast(train_data[0], dtype=tf.float64),
                                                      tf.keras.utils.to_categorical(train_data[1],
                                                                                    flagSettings.num_classes)))

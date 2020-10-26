@@ -2,19 +2,19 @@
 import os
 import pickle
 
+from modelFunctions import *
 from dataManagement import get_data_set
 from linearEvaluation import linear_evaluation_model
-from modelFunctions import build_simCLR_model, warmup_model, train_model, plot_linear_evaluation_accuracy, plot_loss
 
 # The folder name where all the tests will be saved
-folder_prefix = "augmentation_test/"
+folder_prefix = "projection_head_test/"
 plot_prefix = "/plots/"
 
 
 def run_projection_head_study():
-    test_name = "test_pipeline"
-    encoder_network = "resnet-50"
-    projection_heads = ["nonlinear_swish", "nonlinear_extended", "nonlinear", "linear", "none"]
+    test_name = "10_26_night"
+    encoder_network = "resnet-18"
+    projection_heads = ["linear", "none", "nonlinear_swish", "nonlinear_extended", "nonlinear"]
     data_set = "cifar-10"
 
     train_data, val_data, test_data = prepare_pipeline(dataset=data_set, test_name=test_name)
@@ -55,8 +55,7 @@ def run_training_pipeline(model, train_data, val_data, test_data, test_name, pro
 
     print("Starting with linear evaluation: " + model_name)
     model._name = test_name + "/" + model_name + "-linear"
-    sk_learn_model, val_accuracy, test_acc = linear_evaluation_model(trained_model, train_data, val_data, test_data,
-                                                                     "nonlinear")
+    sk_learn_model, val_accuracy, test_acc = linear_evaluation_model(model, train_data, val_data, test_data, projection_head)
     plot_linear_evaluation_accuracy(val_accuracy, should_save_figure=True,
                                     file_name=(plot_save_path + "linear/" + model_name))
     pickle.dump(sk_learn_model, open(weights_save_path + "/linear_models/" + model_name, 'wb'))
@@ -68,12 +67,6 @@ def prepare_pipeline(dataset="cifar-10", test_name="test"):
     if os.path.exists(folder_prefix + test_name):
         raise FileExistsError("There exits already a test with this name, delete or choose another name.")
     os.makedirs(folder_prefix + test_name)
-
-    # # Creates a folder for the checkpoint models
-    if os.path.exists("../checkpoint_models/" + test_name):
-        raise FileExistsError("There exits already a test with this name (in the checkpoint folder),"
-                              " delete or choose another name.")
-    os.makedirs("../checkpoint_models/" + test_name)
 
     # Create folders for the models weights
     os.makedirs(folder_prefix + test_name + "/warmup_models")
