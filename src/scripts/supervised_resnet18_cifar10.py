@@ -39,3 +39,4 @@ if __name__ == "__main__":
     plot_fine_tuning(history, should_save_figure=True, file_name="supervised_resnet18_cifar10")
     evaluate_model(model, test_data)
     model.save_weights("saved_models/supervised_resnet18_cifar10")
+
