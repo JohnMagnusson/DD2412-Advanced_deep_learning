@@ -2,8 +2,8 @@
 import lossFunctions
 
 # Data settings
-data_set = "cifar-10"
-num_classes = 10  # CIFAR-10
+data_set = "flowers"
+num_classes = 5  # CIFAR-10
 
 # Encoder settings
 input_shape = (32, 32, 3)
@@ -11,7 +11,7 @@ input_shape = (32, 32, 3)
 # Training settings
 learning_rate = 0.5
 temperature = 0.1  # Temperature in the loss function
-batch_size = 256
+batch_size = 128
 weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
 nr_epochs = 100
@@ -33,7 +33,7 @@ fine_tune_lr = 0.05  # Following this formula (0.05 * batch_size/ 256)
 fine_tune_nr_epochs = 60  # For 1% data => 60 epochs, 10% data => 30 epochs
 
 # Linear Evaluation settings
-linear_evaluation_nr_epochs = 90
+linear_evaluation_nr_epochs = 200
 linear_evaluation_lr = 0.1
 linear_evaluation_momentum = 0.9
 linear_evaluation_batch_size = 256
