@@ -34,7 +34,7 @@ fine_tune_lr = 0.05  # Following this formula (0.05 * batch_size/ 256)
 fine_tune_nr_epochs = 30  # For 1% data => 60 epochs, 10% data => 30 epochs
 
 # Linear Evaluation settings
-linear_evaluation_nr_epochs = 200
+linear_evaluation_nr_epochs = 90
 linear_evaluation_lr = 0.1
 linear_evaluation_momentum = 0.9
 linear_evaluation_batch_size = 256
