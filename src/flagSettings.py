@@ -2,8 +2,8 @@
 import lossFunctions
 
 # Data settings
-data_set = "flowers"
-num_classes = 5  # CIFAR-10
+data_set = "cifar-10"
+num_classes = 10  # CIFAR-10
 
 # Encoder settings
 input_shape = (32, 32, 3)
@@ -27,7 +27,7 @@ rand_augs = 3  # how many augs?
 rand_strength = 10
 
 # Fine-tune settings
-percentage_fine_tune_data = 0.01
+percentage_fine_tune_data = 0.1
 fine_tune_batch_size = 256
 fine_tune_momentum = 0.9
 fine_tune_lr = 0.05  # Following this formula (0.05 * batch_size/ 256)
