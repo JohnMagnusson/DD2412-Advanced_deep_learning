@@ -11,7 +11,7 @@ input_shape = (32, 32, 3)
 # Training settings
 learning_rate = 0.5
 temperature = 0.1  # Temperature in the loss function
-batch_size = 128
+batch_size = 256
 weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
 nr_epochs = 200
