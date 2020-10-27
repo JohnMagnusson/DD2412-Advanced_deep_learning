@@ -65,3 +65,10 @@ def balanced_subsample(dataset, subsample_size=0.1):
     subsample_data_y = np.array(subsample_data_y)
 
     return subsample_data_x, subsample_data_y
+
+
+def save_test_accuracy(test_accuracy, file_name):
+    print("Saving test accuracy: " + str(test_accuracy) + " to file" + file_name)
+    with open(file_name, 'w') as f:
+        f.write("Test accuracy: " + str(test_accuracy))
+    print("Done writing results to file")

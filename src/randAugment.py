@@ -1,4 +1,7 @@
-# using methods from https://arxiv.org/pdf/1909.13719.pdf, https://github.com/szacho/augmix-tf/blob/master/augmix/transformations.py, https://github.com/ildoonet/pytorch-randaugment/blob/master/RandAugment/augmentations.py
+# This augmentation framework is an attempt of replication of the paper,
+# RandAugment: Practical automated data augmentation with a reduced search space. Source: https://arxiv.org/pdf/1909.13719.pdf
+# Githubs that helped us get it to work, https://github.com/szacho/augmix-tf,https://github.com/ildoonet/pytorch-randaugment
+
 import math
 import random
 
@@ -174,15 +177,8 @@ def AutoContrast(img, _):
     return img
 
 
-def Invert(img, _):
-    print("applying Invert")
-    # img = tf.convert_to_tensor(img)
-    return 255 - img
-
-
 def Equalize(img, _):
     print("applying Equalize")
-    image = tf.cast(tf.math.scalar_mul(255, img), tf.uint8)
 
     def scale_channel(im, c):
         im = tf.cast(im[:, :, c], tf.int32)
@@ -244,7 +240,6 @@ def Posterize(img, v):  # [4, 8]
     image = tf.cast(tf.math.scalar_mul(255, img), tf.uint8)
     image = tf.bitwise.left_shift(tf.bitwise.right_shift(image, shift), shift)
     return image
-    # return tf.cast(tf.clip_by_value(tf.math.divide(img, 255), 0, 1), tf.float32)
 
 
 def Contrast(img, v):  # [0.1,1.9]
@@ -276,26 +271,23 @@ def Brightness(img, v):  # [0.1,1.9]
 
 
 def Sharpness(img, v):  # [0.1,1.9]
-    # need addons #havn't tested yet
     print("applying Sharpness")
     level = float_parameter(sample_level(v), 2)
     return tfa.image.sharpness(img, level)
 
 
 def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
-    pad_size = v
+    print("applying Cutout")
+
     image_height = tf.shape(image)[0]
     image_width = tf.shape(image)[1]
     replace = 0
 
     # Sample the center location in the image where the zero mask will be applied.
-    cutout_center_height = tf.random_uniform(
-        shape=[], minval=0, maxval=image_height,
-        dtype=tf.int32)
+    cutout_center_height = tf.random.uniform(shape=[], minval=0, maxval=image_height,dtype=tf.int32)
+    cutout_center_width = tf.random.uniform(shape=[], minval=0, maxval=image_width,dtype=tf.int32)
 
-    cutout_center_width = tf.random_uniform(
-        shape=[], minval=0, maxval=image_width,
-        dtype=tf.int32)
+    pad_size = int(image.get_shape().as_list()[0] * v)
 
     lower_pad = tf.maximum(0, cutout_center_height - pad_size)
     upper_pad = tf.maximum(0, image_height - cutout_center_height - pad_size)
@@ -317,29 +309,72 @@ def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
     return image
 
 
-def Identity(img, v):
+def flip(image, _):
+    print("applying flip")
+    """Applies a horizontal flip
+    Args:
+        image: a single image or batch of images (if can get to work with tensorflow-addons)
+    Returns:
+        Flipped image
+    """
+    flipped = tf.image.flip_left_right(image)
+    return flipped
+
+
+def crop_resize(image, _):
+    print("applying crop_resize")
+    """Crops image to random size and resizes to original shape
+    Args:
+        image: a single image or batch of images
+    Returns:
+        Tensor of image(s) croped and resized
+    """
+    width, height, color_channels = image.shape
+    bbox = tf.constant([0.0, 0.0, 1.0, 1.0], dtype=tf.float32, shape=[1, 1, 4])
+    ratio = int(width) / int(height)
+    crop_start, crop_size, bound = tf.image.sample_distorted_bounding_box(image_size=tf.shape(image),
+                                                                          bounding_boxes=bbox,
+                                                                          min_object_covered=0.1,
+                                                                          aspect_ratio_range=(
+                                                                              3. / 4 * ratio, 4. / 3. * ratio),
+                                                                          area_range=(0.08, 1.0),
+                                                                          max_attempts=100)
+    y_start, x_start, size = tf.unstack(crop_start)
+    h, w, size = tf.unstack(crop_size)
+    crop_img = tf.image.crop_to_bounding_box(image, y_start, x_start, h, w)
+    original_size = tf.image.resize(crop_img, (height, width), method='nearest', preserve_aspect_ratio=False)
+
+    return original_size
+
+
+def Identity(img, _):
     print("applying Identity")
     return img
 
 
-def augment_list():  # 16 oeprations and their ranges
+def augment_list():
+    # 16 operations and their ranges
+    # Each tuple in the list is the function do to do.
+    # The second parameter is normalization values towards the strength value (min and max).
+    # Note not all functions use the strength. Hence , the min max value.
     l = [
         (Identity, 0., 10.),
-        (ShearX, 0., 10.),  # 0
-        (ShearY, 0., 10.),  # 1
-        (TranslateX, 0., 10.),  # 2
-        (TranslateY, 0., 10.),  # 3
-        (Rotate, 0, 10.),  # 4
-        (AutoContrast, 0, 10.),  # 5
-        # (Invert, 0, 1),  # 6 #not in paper
-        (Equalize, 0, 10.),  # 7
-        (Solarize, 0, 10.),  # 8
-        (Posterize, 4, 10.),  # 9
-        (Contrast, 0.1, 10.),  # 10
-        (Color, 0.1, 10.),  # 11
-        (Brightness, 0.1, 10.),  # 12
-        (Sharpness, 0.1, 10.),  # 13 #need addons #havn't tested yet
-        # (Cutout, 0, 0.2),  # 14 #not in paper
+        (ShearX, 0., 10.),
+        (ShearY, 0., 10.),
+        (TranslateX, 0., 10.),
+        (TranslateY, 0., 10.),
+        (Rotate, 0, 10.),
+        (AutoContrast, 0, 10.),
+        (Equalize, 0, 10.),
+        (Solarize, 0, 10.),
+        (Posterize, 4, 10.),
+        (Contrast, 0.1, 10.),
+        (Color, 0.1, 10.),
+        (Brightness, 0.1, 10.),
+        (Sharpness, 0.1, 10.),
+        (Cutout, 0, 0.2),  # Specific for CIFAR-10
+        (flip, 0, 10.),  # Specific for CIFAR-10
+        (crop_resize, 0, 10.)  # Specific for CIFAR-10
     ]
     return l
 
@@ -347,18 +382,18 @@ def augment_list():  # 16 oeprations and their ranges
 class RandAugment:
     def __init__(self, augments, strength):
         self.n = augments
-        self.m = strength  # [0, 30]
+        self.m = strength  # [0, 10]
         self.augment_list = augment_list()
 
     def __call__(self, img, labels):
         ops1 = random.choices(self.augment_list, k=self.n)
         for op, minval, maxval in ops1:
-            val1 = (float(self.m) / 30) * float(maxval - minval) + minval
+            val1 = (float(self.m) / 10) * float(maxval - minval) + minval
             img1 = op(img, val1)
 
         ops2 = random.choices(self.augment_list, k=self.n)
         for op, minval, maxval in ops2:
-            val2 = (float(self.m) / 30) * float(maxval - minval) + minval
+            val2 = (float(self.m) / 10) * float(maxval - minval) + minval
             img2 = op(img, val2)
 
         return tf.cast(img, tf.float32), tf.cast(img1, tf.float32), tf.cast(img2, tf.float32), labels

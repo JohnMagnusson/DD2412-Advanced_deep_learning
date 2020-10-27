@@ -14,7 +14,7 @@ temperature = 0.1  # Temperature in the loss function
 batch_size = 256
 weight_decay = 10e-6
 loss_function = lossFunctions.NT_Xent_loss
-nr_epochs = 100
+nr_epochs = 200
 use_checkpointing = True
 nr_epochs_warmup = 10
 
@@ -23,14 +23,14 @@ color_jitter_strength = 0.5
 use_gaussian_blur = False
 augmentation_type = 'simclr'  # 'rand' or 'simclr'
 rand_augs = 3  # how many augs?
-rand_strength = 10
+rand_strength = 5
 
 # Fine-tune settings
-percentage_fine_tune_data = 0.01
+percentage_fine_tune_data = 0.1
 fine_tune_batch_size = 256
 fine_tune_momentum = 0.9
 fine_tune_lr = 0.05  # Following this formula (0.05 * batch_size/ 256)
-fine_tune_nr_epochs = 60  # For 1% data => 60 epochs, 10% data => 30 epochs
+fine_tune_nr_epochs = 30  # For 1% data => 60 epochs, 10% data => 30 epochs
 
 # Linear Evaluation settings
 linear_evaluation_nr_epochs = 90
