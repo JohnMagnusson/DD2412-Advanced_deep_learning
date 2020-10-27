@@ -32,12 +32,12 @@ if do_train_new_model:
 if do_fine_tune_model:
     print("Starting with fine-tuning")
     model = build_simCLR_model(encoder_network=encoder_network, projection_head_mode="nonlinear")
-    model.load_weights("saved_models/resnet_18_flowers")
+    #model.load_weights("saved_models/resnet_18_flowers")
     #model.load_weights("checkpoint_models/resnet_18_temp_01")
-    train_data_sub = balanced_subsample(train_data, flagSettings.percentage_fine_tune_data)
-    validation_data_sub = balanced_subsample(val_data, 0.5)
+    train_data_sub = balanced_subsample(train_data, 0.1)
+    validation_data_sub = balanced_subsample(val_data, 1)
 
-    fine_tuned_model, history_fine_tune = fine_tune_model(model, "nonlinear", train_data_sub, validation_data_sub)
+    fine_tuned_model, history_fine_tune = fine_tune_model(model, "nonlinear", train_data_sub, train_data_sub)
     fine_tuned_model.save_weights("finetuned_models/resnet_18_flowers")
     plot_fine_tuning(history_fine_tune, should_save_figure=True, file_name="fine_tuning")
     print("Done with fine-tuning")

@@ -16,10 +16,11 @@ def get_data_set(data_set="cifar-10", validation_ratio=0.2):
         return (x_train, y_train), (x_val, y_val), (x_test, y_test)
     elif data_set == "flowers":
         X = np.load("../../datasets/flowers_processed/flowers_set_x.npy")
-        Y = np.load("../../datasets/flowers_processed/flowers_set_y.npy")
+        Y = np.load("../../datasets/flowers_processed/flowers_set_y.npy").astype(np.uint8)
 
         x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.20, random_state=1)
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.10, random_state=1)
+
         return (x_train, y_train.reshape(-1, 1)), (x_val, y_val.reshape(-1, 1)), (x_test, y_test.reshape(-1, 1))
     else:
         raise NotImplemented("This dataset is not implemented yet : " + flagSettings.data_set)
