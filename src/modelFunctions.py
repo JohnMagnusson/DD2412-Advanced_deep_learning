@@ -20,9 +20,9 @@ if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
 
 
-def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear"):
+def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear", weight_decay=False):
     if encoder_network == "resnet-18":
-        inputs, base_model = resnet18.resnet18(input_shape=flagSettings.input_shape)
+        inputs, base_model = resnet18.resnet18(input_shape=flagSettings.input_shape, weight_decay=weight_decay)
         outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
         sim_clr = Model(inputs=inputs, outputs=outputs)
     elif encoder_network == "resnet-50":

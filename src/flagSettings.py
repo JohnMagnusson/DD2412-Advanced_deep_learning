@@ -17,6 +17,7 @@ loss_function = lossFunctions.NT_Xent_loss
 nr_epochs = 100
 use_checkpointing = True
 nr_epochs_warmup = 10
+weight_decay_layers = 10e-6
 
 # Image augmentation settings
 color_jitter_strength = 0.5

@@ -3,7 +3,7 @@ from modelFunctions import *
 from linearEvaluation import linear_evaluation_model
 import pickle
 
-do_warmup_new_model = False
+do_warmup_new_model = True
 do_train_new_model = False
 do_fine_tune_model = True
 do_linear_evaluation = True
@@ -14,7 +14,7 @@ train_data, val_data, test_data = get_data_set(flagSettings.data_set)
 
 if do_warmup_new_model:
     print("Starting warmup")
-    model = build_simCLR_model(encoder_network=encoder_network, projection_head_mode="nonlinear")
+    model = build_simCLR_model(encoder_network=encoder_network, projection_head_mode="nonlinear", weight_decay=True)
     trained_model, training_loss, validation_loss = warmup_model(model, train_data, val_data)
     trained_model.save_weights("warmedup_models/resnet_18_flowers")
     plot_loss(training_loss, validation_loss, should_save_figure=True, file_name="warmup_loss")

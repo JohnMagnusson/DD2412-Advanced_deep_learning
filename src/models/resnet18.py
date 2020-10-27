@@ -2,6 +2,8 @@ import tensorflow.keras
 from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import GlobalAveragePooling2D, Input, MaxPool2D
+import tensorflow.keras.regularizers
+from tensorflow.python.keras.regularizers import l2
 
 import flagSettings
 
@@ -11,11 +13,20 @@ def resnet_layer(inputs,
                  kernel_size=3,
                  strides=1,
                  activation='relu',
-                 batch_normalization=True):
-    conv = Conv2D(num_filters,
-                  kernel_size=kernel_size,
-                  strides=strides,
-                  padding='same')
+                 batch_normalization=True,
+                 weight_decay=False):
+
+    if weight_decay:
+        conv = Conv2D(num_filters,
+                      kernel_size=kernel_size,
+                      strides=strides,
+                      padding='same',
+                      kernel_regularizer=l2(flagSettings.weight_decay_layers))
+    else:
+        conv = Conv2D(num_filters,
+                      kernel_size=kernel_size,
+                      strides=strides,
+                      padding='same')
 
     x = inputs
 
@@ -28,7 +39,7 @@ def resnet_layer(inputs,
     return x
 
 
-def resnet18(input_shape):
+def resnet18(input_shape, weight_decay=False):
     """ResNet-18
 
     -> Arguments
@@ -43,9 +54,9 @@ def resnet18(input_shape):
     inputs = Input(shape=input_shape)
 
     if flagSettings.data_set == "cifar-10":
-        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1)
+        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1, weight_decay=weight_decay)
     else:
-        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7))
+        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7), weight_decay=weight_decay)
         x = MaxPool2D(pool_size=(3, 3), strides=2, padding="same")(x)
 
     # Instantiate the stack of residual units
@@ -58,11 +69,13 @@ def resnet18(input_shape):
             y = resnet_layer(inputs=x,
                              kernel_size=(3, 3),
                              num_filters=num_filters,
-                             strides=strides)
+                             strides=strides,
+                             weight_decay=weight_decay)
             y = resnet_layer(inputs=y,
                              kernel_size=(3, 3),
                              num_filters=num_filters,
-                             activation=None)
+                             activation=None,
+                             weight_decay=weight_decay)
             if stack > 0 and res_block == 0:  # first layer but not first stack
 
                 x = resnet_layer(inputs=x,
@@ -70,7 +83,8 @@ def resnet18(input_shape):
                                  kernel_size=(1, 1),
                                  strides=strides,
                                  activation=None,
-                                 batch_normalization=True)
+                                 batch_normalization=True,
+                                 weight_decay=weight_decay)
             x = tensorflow.keras.layers.add([x, y])
             x = Activation('relu')(x)
         num_filters *= 2
