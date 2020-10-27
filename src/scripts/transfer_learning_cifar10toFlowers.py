@@ -46,8 +46,13 @@ make_train_data('Rose',FLOWER_ROSE_DIR)
 le=LabelEncoder()
 Y=le.fit_transform(Z)
 
+np.save("flowers_set_x", np.array(X))
+np.save("flowers_set_y", np.array(Y))
 
-x_train,x_test,y_train,y_test=train_test_split(np.array(X),np.array(Y),test_size=0.20,random_state=1)
+X=np.load("flowers_set_x")
+Y=np.load("flowers_set_y")
+
+x_train,x_test,y_train,y_test=train_test_split(X,Y,test_size=0.20,random_state=1)
 x_train, x_val, y_train, y_val = train_test_split(x_train,y_train,test_size=0.10,random_state=1)
 
 

@@ -63,7 +63,7 @@ for batch_numb, (batch_xs, batch_ys) in enumerate(dataset.take(n_batches), 1):
     acc = accuracy(batch_ys, y_pred)
     print("Batch number: %i, loss: %f, accuracy: %f" % (batch_numb, loss, acc))
 '''
-def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head):
+def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head, n_classes=10):
     #x_train = tf.reshape(train_data[0], shape=(-1, 128))
     #x_val = tf.reshape(val_data[0], shape=(-1, 128))
     if type_of_head == "nonlinear" or type_of_head == "nonlinear_swish":
@@ -98,13 +98,14 @@ def linear_evaluation_model(model, train_data, val_data, test_data, type_of_head
 
     val_accuracy = []
     augmEngine = LinearEvalAugmentation()
+    classes_expanded = np.arange(0, n_classes, 1)
     for epoch in tqdm(range(flagSettings.linear_evaluation_nr_epochs)):
         shuffled_training_data = train_data.shuffle(len(list(train_data)))
         train_data_augmented = augmEngine.transform(shuffled_training_data)
         for batch_numb, (batch_xs, batch_ys) in enumerate(train_data_augmented.batch(flagSettings.linear_evaluation_batch_size), 1):
 
             batch_x = model.predict(batch_xs)
-            scikit_model.partial_fit(batch_x, np.argmax(batch_ys.numpy(), axis=1).reshape(-1), classes=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+            scikit_model.partial_fit(batch_x, np.argmax(batch_ys.numpy(), axis=1).reshape(-1), classes=classes_expanded)
         y_val_pred = scikit_model.predict(tf.reshape(X_val, (-1, 512)))
         val_acc = accuracy_score(val_data[1], y_val_pred)
         val_accuracy.append(val_acc)
