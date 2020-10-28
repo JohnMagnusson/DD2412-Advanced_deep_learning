@@ -7,27 +7,19 @@ import flagSettings
 
 
 class TrainingEngine:
+    """
+    Custom training engine to be able to modify the training step according to SimCLR.
+    """
 
-    def __init__(self, model, set_custom_lr=False, batch_size=flagSettings.batch_size, data_augmentation_module=None):
-
+    def __init__(self, model, data_augmentation_module=None):
         self.model = model
-
-        self.set_custom_lr = set_custom_lr
-
-        self.batch_size = batch_size
-
+        self.batch_size = None
         self.loss_object = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-
         self.optimizer = tf.keras.optimizers.Adam()
-
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
-
         self.train_accuracy = tf.keras.metrics.CategoricalAccuracy(name='train_accuracy')
-
         self.test_loss = tf.keras.metrics.Mean(name='test_loss')
-
         self.test_accuracy = tf.keras.metrics.CategoricalAccuracy(name='test_accuracy')
-
         self.data_augmentation_module = data_augmentation_module
 
     @tf.function
@@ -51,35 +43,18 @@ class TrainingEngine:
         t_loss = self.loss_object(predictions_augm_1, predictions_augm_2)
         self.test_loss(t_loss)
 
-    def fit(self, train_data, validation_data, batch_size=100, epochs=20, shuffle=True, data_augmentation=False,
-            verbose_training=True, verbose_validation=True):
+    def fit(self, train_data, validation_data, batch_size=100, epochs=20, shuffle=True, verbose_training=True,
+            verbose_validation=True):
         """
-
-
-        Parameters
-        ----------
-        train_data : TensorFlow Dataset
-
-        validation_data : TensorFlow Dataset
-            DESCRIPTION.
-        batch_size : Integer, optional
-            DESCRIPTION. The default is 100.
-        epochs : Integer, optional
-            DESCRIPTION. The default is 20.
-        shuffle : Boolean, optional
-            DESCRIPTION. The default is True.
-        data_augmentation : Boolean, optional
-            DESCRIPTION. The default is False.
-        verbose : Boolean, optional
-            DESCRIPTION. The default is True.
-
-        Returns
-        -------
-        List of the loss over each epoch
-        :param validation_data:
-        :param verbose_training:
-        :param verbose_validation:
-
+        Trains the model with the set parameters
+        :param train_data: The data to train on
+        :param validation_data: Data fo validate the loss
+        :param batch_size: The size of each batch for training
+        :param epochs: Number of epochs to train the network
+        :param shuffle: bool flag if the training data should be shuffled during training
+        :param verbose_training: bool flag if the training loss should be printed
+        :param verbose_validation: bool flag if the validation loss should be printed
+        :return: The training and validation loss throughout the training in list format
         """
 
         # Convert data to tensor format
@@ -96,9 +71,7 @@ class TrainingEngine:
         for epoch in tqdm(range(epochs)):
             self.train_loss.reset_states()
 
-            if self.set_custom_lr:
-                self.optimizer.lr.assign(self.lr_scheduler.get_learning_rate(epoch))
-            # print(self.optimizer.lr.numpy())
+            self.optimizer.lr.assign(self.lr_scheduler.get_learning_rate(epoch))
             if shuffle:
                 epoch_train_data = train_data.shuffle(len(list(train_data)))
             else:
@@ -135,19 +108,9 @@ class TrainingEngine:
 
     def evaluate(self, test_data):
         """
-
-        Parameters
-        ----------
-        test_data : TensorFlow Dataset
-
-
-        Returns
-        -------
-        numpy
-            test accuracy.
-        numpy
-            test loss.
-
+        Evaluates the performance of the model with a test dataset.
+        :param test_data: TensorFlow Dataset
+        :return: numpy test accuracy and numpy test loss.
         """
 
         self.test_loss.reset_states()

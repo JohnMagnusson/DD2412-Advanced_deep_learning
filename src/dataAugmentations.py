@@ -35,7 +35,9 @@ def crop_resize(image):
 def cut_out(image, pad_size=8, replace=0):
     """
     Apples random cutouts and replaces the whole with a constant value
-    :param img:
+    :param pad_size: Padding of the image
+    :param replace: Value that the cut out will be replaced with
+    :param image: Image to be augmented
     :return: Image with a cutout in it
     """
     # set padsize to half of the width/height of cutout box
@@ -73,7 +75,7 @@ def gaussian_blur(image):
     Returns:
         Image(s) with a gaussian blur applied
     """
-    std = random.uniform(.1, 2)        # std: a random value between 0.1 and 2
+    std = random.uniform(.1, 2)  # std: a random value between 0.1 and 2
     width, height, color_channels = image.shape
     blured_image = tfa.image.gaussian_filter2d(image,
                                                (int(np.round(int(width) * .1, 0)), int(np.round(int(height) * .1, 0))),
@@ -94,19 +96,22 @@ def flip(image):
 
 def rotate_randomly(image):
     """
-    Flips and image randomly in 360 degrees (in the paper they have constant, 90, 180, 270. Here we can do 56 degrees.
-    :param image:
-    :return:
+    Flips and image randomly in 360 degrees (in the paper they have constant, 90, 180, 270.
+    We rotate randomly 0-360 degrees.
+    :param image: Image to be augmented
+    :return: Rotate image
     """
     return tf.keras.preprocessing.image.random_rotation(x=image.numpy(), row_axis=1, col_axis=0, channel_axis=2, rg=360)
+
 
 def nothing(image):
     """
     Do no augmentation on the image
-    :param image:
-    :return:
+    :param image: Image to be augmented
+    :return: Input image
     """
     return image
+
 
 def color_jitter(image, s=1):
     """Applies a color jitter with random brightness, contrast, saturation, and hue
@@ -124,7 +129,7 @@ def color_jitter(image, s=1):
     return image
 
 
-def colorDrop(image):
+def color_drop(image):
     """Applies a color drop (B&W) to image(s)
     Args:
         image: a single image or batch of images
@@ -151,6 +156,12 @@ def sobel(image):
 
 
 def gaussian_noise(image):
+    """
+    Applies Gaussian noise to the images
+    :param image: Input image
+    :return: Noisy image
+    """
+
     image = tf.clip_by_value(image / 255, 0, 1)
     with tf.name_scope('Add_gaussian_noise'):
         noise = tf.compat.v1.random.normal(shape=tf.shape(image), mean=0.0, stddev=(10) / (255), dtype=tf.float32)
@@ -166,7 +177,6 @@ def random_apply(image):
     Returns:
         Tensor of Image(s) with the random augmentations applied
     """
-    # normal_image = image.copy()
 
     # apply crop
     image = crop_resize(image)
@@ -184,15 +194,13 @@ def random_apply(image):
     # apply color drop
     rand = random.randrange(0, 100)
     if rand < 20:
-        image = colorDrop(image)
+        image = color_drop(image)
 
-    if flagSettings.use_gaussian_blur:
+    if flagSettings.use_gaussian_blur:  # On CIFAR-10 we do not use gaussian blur
         # apply gaussian blur
         rand = random.randrange(0, 100)
         if rand < 50:
             image = gaussian_blur(image)
-        else:
-            pass
 
     return image
 
@@ -210,6 +218,12 @@ def augment_batch(images, labels):
 
 
 def fine_tune_augment(image):
+    """
+    Augmentation strategy used for fine-tuning the network
+    :param image: Image to augment
+    :return: Augmented image
+    """
+
     # apply crop
     image = crop_resize(image)
 
@@ -220,7 +234,14 @@ def fine_tune_augment(image):
 
     return image.numpy()
 
+
 def linear_evaluation_augment(image):
+    """
+    Augmentation strategy used for linear evaluation
+    :param image: Image to augment
+    :return: Augmented image
+    """
+
     # apply flip
     rand = random.randrange(0, 100)
     if rand < 50:

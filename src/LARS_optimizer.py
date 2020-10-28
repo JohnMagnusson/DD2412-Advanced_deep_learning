@@ -1,3 +1,12 @@
+"""
+The Lars optimizer is taken from Tensorflow-Addons GitHub.
+It is yet to be merged into master so we used the code from the pull request as we do not have time to wait for
+the optimizer to get merged into the module.
+We have not built, own or take credit for this code.
+The use of the code is solely for academic and research purpose.
+Source: https://github.com/Oneflow-Inc/oneflow/pull/3523
+"""
+
 # import tensorflow.compat.v2 as tf
 import tensorflow as  tf
 

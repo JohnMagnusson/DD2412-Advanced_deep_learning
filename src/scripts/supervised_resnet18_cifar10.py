@@ -18,7 +18,7 @@ def schedule(epoch):
 
 if __name__ == "__main__":
     train_data, val_data, test_data = get_data_set()
-    model = build_normal_resnet(isorOwn=False)
+    model = build_normal_resnet(is_or_own=False)
     data_generator = generator_wrapper(
         ImageDataGenerator(preprocessing_function=fine_tune_augment).flow(x=train_data[0], y=train_data[1],
                                                                           batch_size=flagSettings.fine_tune_batch_size,

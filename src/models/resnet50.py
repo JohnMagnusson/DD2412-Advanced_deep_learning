@@ -22,6 +22,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+"""
+This file is copied from the original Tensorflow Keras implementation.
+We do not own, built it or take credit for this code, we have simply modified it to fit the structure of SimCLR.
+The use of the code is solely for academic and research purpose.
+Found in package tf.keras.applications.ResNet50 and taken from the GitHub:
+https://github.com/tensorflow/tensorflow/blob/v2.3.1/tensorflow/python/keras/applications/resnet.py.
+"""
+
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.applications import imagenet_utils
 from tensorflow.python.keras.engine import training
@@ -451,7 +459,7 @@ def ResNet50(include_top=True,
              input_shape=None,
              pooling=None,
              classes=1000,
-             cifar = False,
+             cifar=False,
              **kwargs):
     """Instantiates the ResNet50 architecture."""
 

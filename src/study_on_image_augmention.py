@@ -1,14 +1,16 @@
-# This is a study in how augmentation affects the accuracy and how important they are.
+"""
+This file is used to create the augmentation study.
+One specifies the augmentation it want to test in the augmentations, set the settings and it will then save down the
+Results are saved in a txt document named after the test.
+"""
 import os
 import pickle
 
-from modelFunctions import *
 from augmentationEngine import AugmentationStudy
 from dataAugmentations import *
 from dataManagement import get_data_set
 from linearEvaluation import linear_evaluation_model
-
-
+from modelFunctions import *  # If using GPU, make sure this module is imported first. Else you will get GPU init error
 
 # The folder name where all the tests will be saved
 folder_prefix = "augmentation_test/"
@@ -16,17 +18,16 @@ plot_prefix = "/plots/"
 
 
 def run_image_augmentation_study():
-    test_name = "server_run_10_25"
+    test_name = "test_study_1"
     encoder_network = "resnet-18"
     projection_head = "nonlinear"
     data_set = "cifar-10"
 
     test_accuracy_per_augment = []
 
-    # augmentations = [crop_resize, cut_out, color_jitter, sobel, gaussian_noise, gaussian_blur, rotate_randomly]
     augmentations = [cut_out, crop_resize, color_jitter, gaussian_noise]
 
-    # !!! Rotate randomly we do in a separate test as it needs special execution which slows down the program by 300%
+    # !Note: Rotate randomly we do in a separate test as it needs special execution which slows down the program by 300%
     # augmentations = [rotate_randomly, cut_out, crop_resize, color_jitter, gaussian_noise, gaussian_blur, sobel]
 
     train_data, val_data, test_data = prepare_pipeline(dataset=data_set, test_name=test_name)
@@ -43,13 +44,15 @@ def run_image_augmentation_study():
             # In the case of an error in the test, we continue with the next on in line
             try:
                 test_accuracy = run_training_pipeline(model, train_data, val_data, test_data, augmentation, test_name)
-                augmentation_test_name = str(augmentation.augmentation1.__name__)+"_" + str(augmentation.augmentation2.__name__)
+                augmentation_test_name = str(augmentation.augmentation1.__name__) + "_" + str(
+                    augmentation.augmentation2.__name__)
                 test_accuracy_per_augment.append((augmentation_test_name, test_accuracy))
                 # Saves after iteration in case of crash or stopping
                 save_test_accuracy(test_accuracy_per_augment, test_name)
             except:
-                augmentation_test_name = str(augmentation.augmentation1.__name__)+"_" + str(augmentation.augmentation2.__name__)
-                print("Got an excpetion whent rying to run test: " + augmentation_test_name +
+                augmentation_test_name = str(augmentation.augmentation1.__name__) + "_" + str(
+                    augmentation.augmentation2.__name__)
+                print("Got an exception when  trying to run test: " + augmentation_test_name +
                       ", please retry this test. Will continue now with next test.")
 
 
@@ -82,12 +85,22 @@ def run_training_pipeline(model, train_data, val_data, test_data, augmentation_e
     sk_learn_model, val_accuracy, test_acc = linear_evaluation_model(trained_model, train_data, val_data, test_data,
                                                                      "nonlinear")
     pickle.dump(sk_learn_model, open(weights_save_path + "/linear_models/" + model_name, 'wb'))
-    plot_linear_evaluation_accuracy(val_accuracy, should_save_figure=True,file_name=(plot_save_path + "linear/" + model_name))
+    plot_linear_evaluation_accuracy(val_accuracy, should_save_figure=True,
+                                    file_name=(plot_save_path + "linear/" + model_name))
     print("Done with linear evaluation")
     return test_acc
 
 
 def prepare_pipeline(dataset="cifar-10", test_name="test"):
+    """
+    Prepares the test pipeline by creating folders for the different models, plots of training and etc.
+    Fetching the dataset in training, validation and test sets.
+    If a test_name is passed with a test already exits it will raise exception to avoid deleting previous test data.
+    :param dataset: The dataset to use for the study
+    :param test_name: The name of test
+    :return: training, validation and test datasets
+    """
+
     if os.path.exists(folder_prefix + test_name):
         raise FileExistsError("There exits already a test with this name, delete or choose another name.")
     os.makedirs(folder_prefix + test_name)
@@ -108,6 +121,13 @@ def prepare_pipeline(dataset="cifar-10", test_name="test"):
 
 
 def save_test_accuracy(test_accuracy_per_augment, test_name="test"):
+    """
+    Saves the tuples of augment and test accuracies to a file
+    :param test_accuracy_per_augment: Tuple of augmentation that was run and the resulting test accuracy
+    :param test_name: Name of the test
+    :return:
+    """
+
     print("Writing augmentation test accuracies to file")
     file_path_name = folder_prefix + test_name + ".txt"
     if not os.path.exists(folder_prefix + test_name):
@@ -118,7 +138,8 @@ def save_test_accuracy(test_accuracy_per_augment, test_name="test"):
         f.write("In case of duplicate in the augmentations, the augmentation is only run once.\n")
         for i in range(len(test_accuracy_per_augment)):
             f.write(
-                "Augmentation: " + str(test_accuracy_per_augment[i][0]) + ", accuracy: " + str(test_accuracy_per_augment[i][1]))
+                "Augmentation: " + str(test_accuracy_per_augment[i][0]) + ", accuracy: " + str(
+                    test_accuracy_per_augment[i][1]))
             f.write("\n")
     print("Done writing results to file")
 

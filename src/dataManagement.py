@@ -9,6 +9,13 @@ import flagSettings
 
 
 def get_data_set(data_set="cifar-10", validation_ratio=0.2):
+    """
+    Loads a data and return training, validation and test set
+    :param data_set: The name of the data set to be fetched
+    :param validation_ratio: How much of the training data should be put aside for valdiation
+    :return: training, validation, test data set. All in format (images, labels) in numpy format
+    """
+
     if data_set == "cifar-10":
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=validation_ratio, random_state=1,
@@ -28,10 +35,12 @@ def get_data_set(data_set="cifar-10", validation_ratio=0.2):
 
 def balanced_subsample(dataset, subsample_size=0.1):
     """
-    Takes in a dataset and returns a subset of it given subsample_size. The class representation is forced to be the same
-    :param dataset:
-    :param subsample_size:
-    :return:
+    Takes in a dataset and returns a subset of it given subsample_size.
+    The returned data set is class balanced
+    :param dataset: The data set to be balanced
+    :param subsample_size: How many percent of the input data set the subsample set should be.
+    Example: Subsample_size=0.1 returns a dataset with 10% of original size, the classes are balanced in this subset.
+    :return: Balanced subsample set
     """
 
     x = dataset[0]
@@ -76,6 +85,13 @@ def balanced_subsample(dataset, subsample_size=0.1):
 
 
 def save_test_accuracy(test_accuracy, file_name):
+    """
+    Saves the test accuracy to the file specified by the file name
+    :param test_accuracy: The accuracy to save
+    :param file_name: The name of the file ot be saved
+    :return:
+    """
+
     print("Saving test accuracy: " + str(test_accuracy) + " to file" + file_name)
     with open(file_name, 'w') as f:
         f.write("Test accuracy: " + str(test_accuracy))

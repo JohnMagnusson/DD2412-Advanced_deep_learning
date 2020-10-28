@@ -1,8 +1,12 @@
+"""
+Our ResNet-18 implantation
+"""
+
 import tensorflow.keras
+import tensorflow.keras.regularizers
 from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import GlobalAveragePooling2D, Input, MaxPool2D
-import tensorflow.keras.regularizers
 from tensorflow.python.keras.regularizers import l2
 
 import flagSettings
@@ -15,7 +19,6 @@ def resnet_layer(inputs,
                  activation='relu',
                  batch_normalization=True,
                  weight_decay=False):
-
     if weight_decay:
         conv = Conv2D(num_filters,
                       kernel_size=kernel_size,
@@ -29,7 +32,6 @@ def resnet_layer(inputs,
                       padding='same')
 
     x = inputs
-
     x = conv(x)
     if batch_normalization:
         x = BatchNormalization()(x)
@@ -54,7 +56,8 @@ def resnet18(input_shape, weight_decay=False):
     inputs = Input(shape=input_shape)
 
     if flagSettings.data_set == "cifar-10":
-        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1, weight_decay=weight_decay)
+        x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(3, 3), strides=1,
+                         weight_decay=weight_decay)
     else:
         x = resnet_layer(inputs=inputs, num_filters=num_filters, kernel_size=(7, 7), weight_decay=weight_decay)
         x = MaxPool2D(pool_size=(3, 3), strides=2, padding="same")(x)

@@ -21,6 +21,14 @@ if len(physical_devices) > 0:
 
 
 def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear", weight_decay=False):
+    """
+    Builds a SimCLR model based on the paramters
+    :param encoder_network: The encoder network of the SimCLR
+    :param projection_head_mode: The projection head to be attached to the encoder network
+    :param weight_decay: bool flag if use weight decay or not
+    :return: A SimCLR model
+    """
+
     if encoder_network == "resnet-18":
         inputs, base_model = resnet18.resnet18(input_shape=flagSettings.input_shape, weight_decay=weight_decay)
         outputs = projectionHead.add_projection_head(base_model, projection_head_mode)
@@ -31,35 +39,44 @@ def build_simCLR_model(encoder_network="resnet-18", projection_head_mode="linear
                               weights=None,
                               pooling='avg',
                               cifar=True)
-        inputs = base_model.input
 
-        outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode, is_resnet50=True)
+        inputs = base_model.input
+        outputs = projectionHead.add_projection_head(base_model.layers[-1].output, projection_head_mode,
+                                                     is_resnet50=True)
         sim_clr = Model(inputs=inputs, outputs=outputs, name="SimCLR")
     else:
         raise Exception("Illegal type of encoder network: " + str(encoder_network))
 
-    # sim_clr.summary()
     return sim_clr
 
 
-def build_normal_resnet(isorOwn=False):
+def build_normal_resnet(is_or_own=False):
+    """
+    Builds a normal ResNet for supervised learning
+    :param is_or_own: bool flag if the models should be used with our default settings or not
+    :return: a ResNet model for supervised learning
+    """
+
     inputs, hiddens = resnet18.resnet18(input_shape=flagSettings.input_shape)
     outputs = Dense(flagSettings.num_classes, activation='softmax')(hiddens)
     model = Model(inputs=inputs, outputs=outputs)
-    if isorOwn:
+    if is_or_own:
         SGD = tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
         model.compile(loss="sparse_categorical_crossentropy", optimizer=SGD, metrics=["accuracy"])
     return model
 
 
-def train_model_default(model, training_data, training_labels):
-    model.fit(training_data, training_labels, epochs=flagSettings.nr_epochs, batch_size=flagSettings.batch_size)
-    return model, []
-
-
 def warmup_model(model, train_data, val_data, augmentation_engine=SimClrAugmentation()):
-    training_module = TrainingEngine(model, set_custom_lr=True)
+    """
+    Warms up the model
+    :param model: The model to be warmed up
+    :param train_data: Training data to be used
+    :param val_data: Validation data to be used
+    :param augmentation_engine: How the images will be augmented during training
+    :return: A warmed up model, training and validation loss during the training. (model, training loss, validation loss)
+    """
 
+    training_module = TrainingEngine(model)
     training_module.optimizer = MomentumLARS()
     training_module.lr_scheduler = Linear_decay_lr_scheduler()
     training_module.loss_object = flagSettings.loss_function
@@ -68,16 +85,21 @@ def warmup_model(model, train_data, val_data, augmentation_engine=SimClrAugmenta
                                                          val_data,
                                                          batch_size=flagSettings.batch_size,
                                                          epochs=flagSettings.nr_epochs_warmup)
-
     return model, training_loss, validation_loss
 
 
 def train_model(model, train_data, val_data, augmentation_engine=SimClrAugmentation()):
-    training_module = TrainingEngine(model, set_custom_lr=True)
+    """
+    Train the model with unsupervised training
+    :param model: The model to be trained
+    :param train_data: Training data to be used
+    :param val_data: Validation data to be used
+    :param augmentation_engine: How the images will be augmented during training
+    :return: A trained model, training and validation loss during the training. (model, training loss, validation loss)
+    """
 
+    training_module = TrainingEngine(model)
     training_module.optimizer = MomentumLARS(weight_decay=flagSettings.weight_decay)
-    # skip_list=['batch_normalization', 'bias',  'head_supervised'])   # Todo add this?
-
     training_module.lr_scheduler = Cosine_decay_lr_scheduler(decay_steps=flagSettings.nr_epochs,
                                                              initial_learning_rate=flagSettings.learning_rate)
     training_module.loss_object = flagSettings.loss_function
@@ -91,7 +113,15 @@ def train_model(model, train_data, val_data, augmentation_engine=SimClrAugmentat
 
 
 def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset):
-    # Add dense with softmax for prediction
+    """
+    Fine tunes the model on input data set. Freezing the base model
+    :param base_model: The base model, already trained
+    :param type_of_head: The type of projection head that was used during training
+    :param train_dataset: Training data to be used
+    :param validation_dataset: Validation data to be used
+    :return: Fine tuned model and a history object with loss and accuracy for the training
+    """
+
     if type_of_head == "nonlinear":
         fine_tune_at = -4
     elif type_of_head == "linear":
@@ -102,7 +132,7 @@ def fine_tune_model(base_model, type_of_head, train_dataset, validation_dataset)
         raise Exception("This type of head is not supported: " + str(type_of_head))
 
     x = base_model.layers[fine_tune_at].output
-    base_model.trainable = False
+    base_model.trainable = False    # Here we freeze the base model, only the attached dense layer will be trained
     outputs = Dense(flagSettings.num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=outputs)
     model.compile(loss="sparse_categorical_crossentropy",
@@ -143,6 +173,15 @@ def generator_wrapper(generator):
 
 
 def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name=""):
+    """
+    Plots and saves the input losses, if specified
+    :param training_loss: List of training loss
+    :param validation_loss: List of validation loss
+    :param should_save_figure: bool flag if the plot should be saved to file
+    :param file_name: The name of the file if the plot is saved
+    :return:
+    """
+
     plt.plot(training_loss, label='Training loss')
     plt.plot(validation_loss, label='Validation loss')
     plt.xlabel('Epochs')
@@ -155,6 +194,14 @@ def plot_loss(training_loss, validation_loss, should_save_figure=True, file_name
 
 
 def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True, file_name=""):
+    """
+    Plots the validation accuracy of the linear evaluation, also saves plot if specified
+    :param validation_accuracy:
+    :param should_save_figure: bool flag if the plot should be saved to file
+    :param file_name: The name of the file if the plot is saved
+    :return:
+    """
+
     plt.plot(validation_accuracy, label='Validation accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
@@ -166,6 +213,14 @@ def plot_linear_evaluation_accuracy(validation_accuracy, should_save_figure=True
 
 
 def plot_fine_tuning(history, should_save_figure=False, file_name=""):
+    """
+    Plots the fine-tuning information and saves if specified
+    :param history: Fine-tuning history object (contains training and validation for both loss and accuracy
+    :param should_save_figure: bool flag if the plot should be saved to file
+    :param file_name: The name of the file if the plot is saved
+    :return:
+    """
+
     plt.plot(history.history['accuracy'])
     plt.plot(history.history['val_accuracy'])
     plt.title('model accuracy')
@@ -191,6 +246,13 @@ def plot_fine_tuning(history, should_save_figure=False, file_name=""):
 
 
 def evaluate_model(trained_model, test_data):
+    """
+    Evaluates the trained model on test data
+    :param trained_model: The trained model
+    :param test_data: Test dataset
+    :return: The models accuracy on the dataset
+    """
+
     testData, testLabels = test_data[0], test_data[1]
     scores = trained_model.evaluate(x=testData, y=testLabels, verbose=1)
     print("%s: %.2f%% on the test set" % (trained_model.metrics_names[1], scores[1] * 100))
@@ -227,7 +289,6 @@ def visualize_model_class_understanding(model, dataset, nr_sample_to_visualize, 
         raise Exception("This mode for the projection head is not supported: " + str(projection_head_mode))
 
     tsne = TSNE()
-    # projection.summary()
 
     x, y = (dataset[0][:nr_sample_to_visualize], dataset[1][:nr_sample_to_visualize])
     x_features = projection.predict(x)

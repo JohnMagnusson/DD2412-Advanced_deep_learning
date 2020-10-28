@@ -1,6 +1,8 @@
-# This augmentation framework is an attempt of replication of the paper,
-# RandAugment: Practical automated data augmentation with a reduced search space. Source: https://arxiv.org/pdf/1909.13719.pdf
-# Githubs that helped us get it to work, https://github.com/szacho/augmix-tf,https://github.com/ildoonet/pytorch-randaugment
+"""
+This augmentation framework is an attempt of replication of the paper,
+"RandAugment: Practical automated data augmentation with a reduced search space". Source: https://arxiv.org/pdf/1909.13719.pdf
+Githubs that helped us get it to work, https://github.com/szacho/augmix-tf,https://github.com/ildoonet/pytorch-randaugment
+"""
 
 import math
 import random
@@ -43,6 +45,14 @@ def affine_transform(image, transform_matrix):
 
 
 def blend(image1, image2, factor):
+    """
+    Blend 2 images
+    :param image1:
+    :param image2:
+    :param factor: How they belnd
+    :return:
+    """
+
     if factor == 0.0:
         return tf.convert_to_tensor(image1)
     if factor == 1.0:
@@ -68,8 +78,8 @@ def blend(image1, image2, factor):
     return tf.cast(tf.clip_by_value(temp, 0.0, 255.0), tf.uint8)
 
 
-def ShearX(img, v):  # [-0.3, 0.3]
-    print("applying ShearX")
+def shear_x(img, v):  # [-0.3, 0.3]
+    print("applying shear_x")
     lvl = float_parameter(sample_level(v), 0.3 * 25)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     lvl = tf.cond(rand_var > 0.5, lambda: lvl, lambda: -lvl)
@@ -83,8 +93,8 @@ def ShearX(img, v):  # [-0.3, 0.3]
     return transformed
 
 
-def ShearY(img, v):  # [-0.3, 0.3]
-    print("applying ShearY")
+def shear_y(img, v):  # [-0.3, 0.3]
+    print("applying shear_y")
     lvl = float_parameter(sample_level(v), 0.3 * 25)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     lvl = tf.cond(rand_var > 0.5, lambda: lvl, lambda: -lvl)
@@ -98,8 +108,8 @@ def ShearY(img, v):  # [-0.3, 0.3]
     return transformed
 
 
-def TranslateX(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
-    print("applying TranslateX")
+def translate_x(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    print("applying translate_x")
     lvl = int_parameter(sample_level(v), img.shape[0] / 3)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     lvl = tf.cond(rand_var > 0.5, lambda: lvl, lambda: -lvl)
@@ -113,8 +123,8 @@ def TranslateX(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
     return transformed
 
 
-def TranslateY(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
-    print("applying TranslateY")
+def translate_y(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
+    print("applying translate_y")
     lvl = int_parameter(sample_level(v), img.shape[0] / 3)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     lvl = tf.cond(rand_var > 0.5, lambda: lvl, lambda: -lvl)
@@ -128,8 +138,8 @@ def TranslateY(img, v):  # [-150, 150] => percentage: [-0.45, 0.45]
     return transformed
 
 
-def Rotate(img, v):  # [-30, 30]
-    print("applying Rotate")
+def rotate(img, v):  # [-30, 30]
+    print("applying rotate")
     degrees = float_parameter(sample_level(v), 180)
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     degrees = tf.cond(rand_var > 0.5, lambda: degrees, lambda: -degrees)
@@ -149,7 +159,7 @@ def Rotate(img, v):  # [-30, 30]
     return transformed
 
 
-def AutoContrast(img, _):
+def auto_contrast(img, _):
     print("applying AutoContrast")
     img = tf.cast(tf.math.scalar_mul(255, img), tf.int32)
 
@@ -177,7 +187,7 @@ def AutoContrast(img, _):
     return img
 
 
-def Equalize(img, _):
+def equalize(img, _):
     print("applying Equalize")
 
     def scale_channel(im, c):
@@ -216,13 +226,13 @@ def Equalize(img, _):
     return image
 
 
-def Solarize(img, v):  # [0, 256]
+def solarize(img, v):  # [0, 256]
     print("applying Solarize")
     threshold = 128
     return tf.where(img < threshold, img, 255 - img)
 
 
-def SolarizeAdd(img, addition=0, threshold=128):
+def solarize_add(img, addition=0, threshold=128):
     print("applying SolarizeAdd")
     rand_var = tf.random.uniform(shape=[], dtype=tf.float32)
     addition = tf.cond(rand_var > 0.5, lambda: addition, lambda: -addition)
@@ -232,7 +242,7 @@ def SolarizeAdd(img, addition=0, threshold=128):
     return tf.where(img < threshold, added_image, img)
 
 
-def Posterize(img, v):  # [4, 8]
+def posterize(img, v):  # [4, 8]
     print("applying Posturize")
     lvl = int_parameter(sample_level(v), 8)
     shift = 8 - lvl
@@ -242,7 +252,7 @@ def Posterize(img, v):  # [4, 8]
     return image
 
 
-def Contrast(img, v):  # [0.1,1.9]
+def contrast(img, v):  # [0.1,1.9]
     print("applying Contrast")
     factor = float_parameter(sample_level(v), 2)
     factor = tf.reshape(factor, [])
@@ -251,7 +261,7 @@ def Contrast(img, v):  # [0.1,1.9]
     return tf.image.adjust_contrast(img, factor)
 
 
-def Color(img, v):  # [0.1,1.9]
+def color(img, v):  # [0.1,1.9]
     print("applying color")
     factor = float_parameter(sample_level(v), 1.8) + 0.1
     img = tf.cast(tf.math.scalar_mul(255, img), tf.uint8)
@@ -261,7 +271,7 @@ def Color(img, v):  # [0.1,1.9]
     # return tf.cast(tf.clip_by_value(tf.math.divide(blended, 255), 0, 1), tf.float32)
 
 
-def Brightness(img, v):  # [0.1,1.9]
+def brightness(img, v):  # [0.1,1.9]
     print("applying Brightness")
     img = tf.cast(tf.clip_by_value(tf.math.divide(img, 255), 0, 1), tf.float32)
     delta = float_parameter(sample_level(v), 1)
@@ -270,13 +280,13 @@ def Brightness(img, v):  # [0.1,1.9]
     return tf.cast(tf.multiply(tf.clip_by_value(tf.image.adjust_brightness(img, delta=delta), 0, 1), 255), tf.int32)
 
 
-def Sharpness(img, v):  # [0.1,1.9]
+def sharpness(img, v):  # [0.1,1.9]
     print("applying Sharpness")
     level = float_parameter(sample_level(v), 2)
     return tfa.image.sharpness(img, level)
 
 
-def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
+def cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
     print("applying Cutout")
 
     image_height = tf.shape(image)[0]
@@ -284,8 +294,8 @@ def Cutout(image, v):  # [0, 60] => percentage: [0, 0.2]
     replace = 0
 
     # Sample the center location in the image where the zero mask will be applied.
-    cutout_center_height = tf.random.uniform(shape=[], minval=0, maxval=image_height,dtype=tf.int32)
-    cutout_center_width = tf.random.uniform(shape=[], minval=0, maxval=image_width,dtype=tf.int32)
+    cutout_center_height = tf.random.uniform(shape=[], minval=0, maxval=image_height, dtype=tf.int32)
+    cutout_center_width = tf.random.uniform(shape=[], minval=0, maxval=image_width, dtype=tf.int32)
 
     pad_size = int(image.get_shape().as_list()[0] * v)
 
@@ -347,32 +357,36 @@ def crop_resize(image, _):
     return original_size
 
 
-def Identity(img, _):
+def identity(img, _):
     print("applying Identity")
     return img
 
 
 def augment_list():
-    # 16 operations and their ranges
-    # Each tuple in the list is the function do to do.
-    # The second parameter is normalization values towards the strength value (min and max).
-    # Note not all functions use the strength. Hence , the min max value.
+    """
+    18 operations and their ranges
+    Each tuple in the list is the function do to do.
+    The second parameter is normalization values towards the strength value (min and max).
+    Note not all functions use the strength. Hence , the min max value.
+    :returns the list of tuples of augments with max and min value (augment function, min value, max value)
+    """
+
     l = [
-        (Identity, 0., 10.),
-        (ShearX, 0., 10.),
-        (ShearY, 0., 10.),
-        (TranslateX, 0., 10.),
-        (TranslateY, 0., 10.),
-        (Rotate, 0, 10.),
-        (AutoContrast, 0, 10.),
-        (Equalize, 0, 10.),
-        (Solarize, 0, 10.),
-        (Posterize, 4, 10.),
-        (Contrast, 0.1, 10.),
-        (Color, 0.1, 10.),
-        (Brightness, 0.1, 10.),
-        (Sharpness, 0.1, 10.),
-        (Cutout, 0, 0.2),  # Specific for CIFAR-10
+        (identity, 0., 10.),
+        (shear_x, 0., 10.),
+        (shear_y, 0., 10.),
+        (translate_x, 0., 10.),
+        (translate_y, 0., 10.),
+        (rotate, 0, 10.),
+        (auto_contrast, 0, 10.),
+        (equalize, 0, 10.),
+        (solarize, 0, 10.),
+        (posterize, 4, 10.),
+        (contrast, 0.1, 10.),
+        (color, 0.1, 10.),
+        (brightness, 0.1, 10.),
+        (sharpness, 0.1, 10.),
+        (cutout, 0, 0.2),  # Specific for CIFAR-10
         (flip, 0, 10.),  # Specific for CIFAR-10
         (crop_resize, 0, 10.)  # Specific for CIFAR-10
     ]

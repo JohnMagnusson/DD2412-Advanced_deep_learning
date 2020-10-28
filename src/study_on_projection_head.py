@@ -1,4 +1,9 @@
-# In this file we experiment how the loss/ accuracy changes as we choose different architectures for the projection head
+#
+"""
+This file is used to create the projection head study.
+In this file we experiment how the loss/ accuracy changes as we choose different architectures for the projection head.
+Results are saved in a txt document named after the test.
+"""
 import os
 import pickle
 
@@ -12,7 +17,7 @@ plot_prefix = "/plots/"
 
 
 def run_projection_head_study():
-    test_name = "10_26_night"
+    test_name = "test_study_1"
     encoder_network = "resnet-18"
     projection_heads = ["linear", "none", "nonlinear_swish", "nonlinear_extended", "nonlinear"]
     data_set = "cifar-10"
@@ -64,6 +69,15 @@ def run_training_pipeline(model, train_data, val_data, test_data, test_name, pro
 
 
 def prepare_pipeline(dataset="cifar-10", test_name="test"):
+    """
+    Prepares the test pipeline by creating folders for the different models, plots of training and etc.
+    Fetching the dataset in training, validation and test sets.
+    If a test_name is passed with a test already exits it will raise exception to avoid deleting previous test data.
+    :param dataset: The dataset to use for the study
+    :param test_name: The name of test
+    :return: training, validation and test datasets
+    """
+
     if os.path.exists(folder_prefix + test_name):
         raise FileExistsError("There exits already a test with this name, delete or choose another name.")
     os.makedirs(folder_prefix + test_name)
@@ -84,6 +98,13 @@ def prepare_pipeline(dataset="cifar-10", test_name="test"):
 
 
 def save_test_accuracy(test_accuracy_for_projection_heads, test_name="test"):
+    """
+    Saves the tuples of augment and test accuracies to a file
+    :param test_accuracy_for_projection_heads: Tuple of projection head that was run and the resulting test accuracy
+    :param test_name: Name of the test
+    :return:
+    """
+
     print("Writing test accuracies for different projection heads to file")
     file_path_name = folder_prefix + test_name + ".txt"
     if not os.path.exists(folder_prefix + test_name):
